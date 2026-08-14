@@ -135,3 +135,19 @@ input, textarea, select {
 .animate-scale-up {
   animation: scaleUp var(--duration-normal) var(--ease-out-smooth) forwards;
 }
+
+/* Hide Next.js dev indicator floating badge */
+nextjs-portal,
+[data-nextjs-dev-tools-button],
+[data-nextjs-toast-wrapper],
+div[class*="next-dev-tools"],
+div[data-nextjs-portal] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.top-header {
+  padding-top: max(16px, env(safe-area-inset-top, 16px));
+}
+
