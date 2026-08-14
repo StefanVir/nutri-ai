@@ -3,6 +3,8 @@ import { PreSwipeContext, MealCardProposal } from '@/types/nutrition';
 import { MealCardDeckSchema, QuickLogOutputSchema, QuickLogOutput } from './schemas';
 import { filterOrGenerateRecipes } from './mockRecipes';
 import { resolveMealImageUrl } from './foodImages';
+import { calculateMealTargetSlot } from './metabolic';
+import { recalculateAndGroundMeal } from './nutritionDb';
 
 // NVIDIA NIM OpenAI-Compatible Endpoint
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
@@ -43,6 +45,19 @@ function parseJsonResponse(raw: string): any {
 export async function generateNIMMealDeck(context: PreSwipeContext): Promise<MealCardProposal[]> {
   const client = getOpenAIClient();
 
+  // Tier 1: Top-Down Dynamic Meal Slot Partitioning
+  const mealSlot = calculateMealTargetSlot(
+    2100,
+    160,
+    200,
+    65,
+    context.remainingCalories || 2100,
+    context.remainingProtein || 160,
+    context.remainingCarbs || 200,
+    context.remainingFat || 65,
+    context.mealCategory || 'lunch'
+  );
+
   if (!client) {
     return filterOrGenerateRecipes(context);
   }
@@ -56,26 +71,27 @@ export async function generateNIMMealDeck(context: PreSwipeContext): Promise<Mea
     : 'Bucătărie standard (aragaz/cuptor/airfryer)';
 
   const systemPrompt = `You are an elite sports nutrition chef for NutriAI.
-You create tailored meal proposals in Romanian based STRICTLY on the user's specific inputs:
+You create tailored single-meal recipes in Romanian based STRICTLY on the user's specific inputs:
 - Ingredients provided: [${ingredientsListStr}]
 - Appliances available: [${appliancesStr}]
 - Mode: ${context.mode}
-- Target remaining macros: ${context.remainingCalories} kcal, ${context.remainingProtein}g Protein, ${context.remainingCarbs}g Carbs, ${context.remainingFat}g Fat.
+- TARGET MEAL SLOT: ~${mealSlot.targetCalories} kcal (Range: ${mealSlot.minCalories}-${mealSlot.maxCalories} kcal), ~${mealSlot.targetProtein}g Protein, ~${mealSlot.targetCarbs}g Carbs, ~${mealSlot.targetFat}g Fat.
 
 CRITICAL INVARIANTS:
-1. Every generated recipe MUST prioritize and incorporate the specific ingredients provided by the user (${ingredientsListStr}). Do NOT default to unrelated chicken or generic recipes if the user specified other ingredients!
-2. Match the remaining macros closely (~${context.remainingCalories} kcal, ~${context.remainingProtein}g P).
-3. The response MUST be ONLY valid JSON matching this schema:
+1. Every generated recipe MUST prioritize and incorporate the specific ingredients provided by the user (${ingredientsListStr}).
+2. Use REALISTIC SINGLE-SERVING gram amounts (e.g., 150-220g meat/fish, 120-180g cooked carbs, 80-120g veggies, 5-15ml oil).
+3. The sum of ingredient calories MUST naturally match the single meal target (~${mealSlot.targetCalories} kcal). DO NOT output the full day's calorie budget (2000+ kcal) for a single dish!
+4. The response MUST be ONLY valid JSON matching this schema:
 {
   "recipes": [
     {
       "id": "rec-1",
       "title": "Titlu preparat specific în Română",
       "mode": "${context.mode}",
-      "calories": ${context.remainingCalories || 500},
-      "protein": ${context.remainingProtein || 40},
-      "carbs": ${context.remainingCarbs || 45},
-      "fat": ${context.remainingFat || 15},
+      "calories": ${mealSlot.targetCalories},
+      "protein": ${mealSlot.targetProtein},
+      "carbs": ${mealSlot.targetCarbs},
+      "fat": ${mealSlot.targetFat},
       "prepTimeMinutes": 10,
       "cookTimeMinutes": 15,
       "difficulty": "Ușor",
@@ -87,7 +103,7 @@ CRITICAL INVARIANTS:
       "ingredients": [
         {
           "name": "Nume ingredient",
-          "amount": "150g",
+          "amount": "180g",
           "isPantryStock": true,
           "toBuy": false,
           "estimatedPriceRon": 0
@@ -105,7 +121,7 @@ CRITICAL INVARIANTS:
   const userPrompt = `Generează 3 rețete variate și delicioase folosind în mod expres aceste ingrediente disponibile: ${ingredientsListStr}.
 Echipamente: ${appliancesStr}.
 Mod gătire: ${context.mode} (${context.mode === 'fridge' ? 'Folosește ce am în frigider' : context.mode === 'grocery_empty' ? `Buget total: ${context.maxBudgetRon || 30} RON` : 'Smart Grocery / Restaurant'}).
-Macro-uri țintă: ~${context.remainingCalories} kcal, ~${context.remainingProtein}g Proteine, ~${context.remainingCarbs}g Carbohidrați, ~${context.remainingFat}g Grăsimi.`;
+Țintă pentru această masă (${context.mealCategory}): ~${mealSlot.targetCalories} kcal, ~${mealSlot.targetProtein}g Proteine, ~${mealSlot.targetCarbs}g Carbohidrați, ~${mealSlot.targetFat}g Grăsimi.`;
 
   // Try fast 8B model first, fallback to high capacity model
   const modelsToTry = [FAST_DECK_MODEL, HIGH_CAPACITY_MODEL];
@@ -129,10 +145,14 @@ Macro-uri țintă: ~${context.remainingCalories} kcal, ~${context.remainingProte
       const parsed = MealCardDeckSchema.safeParse(rawJson);
 
       if (parsed.success && parsed.data.recipes.length > 0) {
-        return parsed.data.recipes.map((rec) => ({
-          ...rec,
-          imageUrl: rec.imageUrl || resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
-        })) as MealCardProposal[];
+        return parsed.data.recipes.map((rec) => {
+          // Tier 3: Deterministic Bottom-Up Ingredient Aggregator
+          const grounded = recalculateAndGroundMeal(rec, mealSlot.targetCalories);
+          return {
+            ...grounded,
+            imageUrl: grounded.imageUrl || resolveMealImageUrl(grounded.title, grounded.ingredients, grounded.tags),
+          };
+        }) as MealCardProposal[];
       }
     } catch (err) {
       console.warn(`Model ${model} encounter error:`, err);

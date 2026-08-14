@@ -297,3 +297,130 @@ export function groundNutritionalItem(
     fat: Math.round((matched.per100g.fat * factor + offset.extraFatGrams) * 10) / 10,
   };
 }
+
+/**
+ * Extracts realistic gram weights from natural language ingredient amounts
+ * (e.g. "150g", "1 lipie (60g)", "10ml", "2 bucăți", "1 conservă (120g)")
+ */
+export function parseGramsFromAmount(amountStr: string = '', defaultGrams: number = 100): number {
+  if (!amountStr) return defaultGrams;
+
+  const text = amountStr.toLowerCase().trim();
+
+  // Pattern: (120g) or (60 g) or (15ml)
+  const parenMatch = text.match(/\((\d+(?:\.\d+)?)\s*(?:g|ml|gr|g.)\)/i);
+  if (parenMatch) return parseFloat(parenMatch[1]);
+
+  // Pattern: 150g, 150 gr, 200 ml
+  const directMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:g|ml|gr|g.)/i);
+  if (directMatch) return parseFloat(directMatch[1]);
+
+  // Pattern: 2 buc, 3 oua
+  const countMatch = text.match(/^(\d+)\s*(?:buc|bucati|bucăți|oua|ouă|felii)/i);
+  if (countMatch) {
+    const count = parseInt(countMatch[1], 10);
+    if (text.includes('ou') || text.includes('oua')) return count * 55; // 1 egg ~55g
+    if (text.includes('felie') || text.includes('felii')) return count * 35; // 1 slice bread ~35g
+    return count * 60;
+  }
+
+  // Pattern: 1 lingură / 1 lingura
+  if (text.includes('lingura') || text.includes('lingură')) return 15;
+  if (text.includes('lingurita') || text.includes('linguriță')) return 5;
+
+  return defaultGrams;
+}
+
+/**
+ * Deterministic Truth Engine:
+ * Recalculates total meal calories and macronutrients strictly from the sum of its ingredients
+ * using USDA FoodData Central reference values. Eliminates LLM hallucination and inconsistency.
+ */
+export function recalculateAndGroundMeal<T extends {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  ingredients: { name: string; amount: string; [key: string]: any }[];
+}>(recipe: T, targetSlotCalories?: number): T {
+  if (!recipe.ingredients || recipe.ingredients.length === 0) {
+    return recipe;
+  }
+
+  let rawTotalKcal = 0;
+  let rawTotalProt = 0;
+  let rawTotalCarbs = 0;
+  let rawTotalFat = 0;
+
+  const groundedIngredients = recipe.ingredients.map((ing) => {
+    const grams = parseGramsFromAmount(ing.amount, 100);
+    const grounded = groundNutritionalItem(ing.name, grams, 'dry_grill');
+
+    rawTotalKcal += grounded.calories;
+    rawTotalProt += grounded.protein;
+    rawTotalCarbs += grounded.carbs;
+    rawTotalFat += grounded.fat;
+
+    return {
+      ...ing,
+      parsedGrams: grams,
+    };
+  });
+
+  // If a target slot was requested and the raw sum is significantly under target (>25% under),
+  // scale the primary protein and carb ingredients proportionately and update ingredient text
+  let finalIngredients = recipe.ingredients;
+  let finalKcal = Math.round(rawTotalKcal);
+  let finalProt = Math.round(rawTotalProt);
+  let finalCarbs = Math.round(rawTotalCarbs);
+  let finalFat = Math.round(rawTotalFat);
+
+  if (targetSlotCalories && targetSlotCalories > 400 && rawTotalKcal > 150) {
+    const scaleRatio = Math.min(1.45, Math.max(0.8, targetSlotCalories / rawTotalKcal));
+
+    if (Math.abs(scaleRatio - 1.0) > 0.15) {
+      let scaledKcal = 0;
+      let scaledProt = 0;
+      let scaledCarbs = 0;
+      let scaledFat = 0;
+
+      finalIngredients = groundedIngredients.map((ing, idx) => {
+        // Scale main protein/carb items (usually first 1-3 ingredients)
+        const isScalable = idx <= 2 && !ing.name.toLowerCase().includes('ulei') && !ing.name.toLowerCase().includes('condiment');
+        const factor = isScalable ? scaleRatio : 1.0;
+        const newGrams = Math.round(ing.parsedGrams * factor);
+
+        const grounded = groundNutritionalItem(ing.name, newGrams, 'dry_grill');
+        scaledKcal += grounded.calories;
+        scaledProt += grounded.protein;
+        scaledCarbs += grounded.carbs;
+        scaledFat += grounded.fat;
+
+        // Keep unit formatting clean (e.g. "180g" or "1 buc (60g)")
+        const updatedAmount = ing.amount.includes('(')
+          ? ing.amount.replace(/\(\d+g\)/i, `(${newGrams}g)`)
+          : `${newGrams}g`;
+
+        const { parsedGrams, ...cleanIng } = ing;
+        return {
+          ...cleanIng,
+          amount: isScalable ? updatedAmount : ing.amount,
+        };
+      });
+
+      finalKcal = Math.round(scaledKcal);
+      finalProt = Math.round(scaledProt);
+      finalCarbs = Math.round(scaledCarbs);
+      finalFat = Math.round(scaledFat);
+    }
+  }
+
+  return {
+    ...recipe,
+    calories: Math.max(150, finalKcal),
+    protein: Math.max(10, finalProt),
+    carbs: Math.max(5, finalCarbs),
+    fat: Math.max(3, finalFat),
+    ingredients: finalIngredients,
+  };
+}

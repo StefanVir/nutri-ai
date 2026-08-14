@@ -1,5 +1,7 @@
 import { MealCardProposal, PreSwipeContext } from '@/types/nutrition';
 import { resolveMealImageUrl } from './foodImages';
+import { calculateMealTargetSlot } from './metabolic';
+import { recalculateAndGroundMeal } from './nutritionDb';
 
 export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardProposal[] {
   const userItems = (context.fridgeIngredients || []).filter((i) => i.trim().length > 0);
@@ -7,10 +9,23 @@ export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardPropo
   const primaryApp = appliances[0] || 'Tigaie';
   const secondaryApp = appliances[1] || appliances[0] || 'Airfryer';
 
-  const cal = context.remainingCalories && context.remainingCalories > 200 ? context.remainingCalories : 550;
-  const prot = context.remainingProtein && context.remainingProtein > 10 ? context.remainingProtein : 42;
-  const carbs = context.remainingCarbs && context.remainingCarbs > 10 ? context.remainingCarbs : 50;
-  const fat = context.remainingFat && context.remainingFat > 5 ? context.remainingFat : 16;
+  // Tier 1: Slot Allocation
+  const mealSlot = calculateMealTargetSlot(
+    2100,
+    160,
+    200,
+    65,
+    context.remainingCalories || 2100,
+    context.remainingProtein || 160,
+    context.remainingCarbs || 200,
+    context.remainingFat || 65,
+    context.mealCategory || 'lunch'
+  );
+
+  const cal = mealSlot.targetCalories;
+  const prot = mealSlot.targetProtein;
+  const carbs = mealSlot.targetCarbs;
+  const fat = mealSlot.targetFat;
 
   // If user provided specific ingredients, build custom personalized meals around them!
   if (userItems.length > 0) {
@@ -109,10 +124,13 @@ export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardPropo
       },
     ];
 
-    return dynamicCards.map((rec) => ({
-      ...rec,
-      imageUrl: resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
-    }));
+    return dynamicCards.map((rec) => {
+      const grounded = recalculateAndGroundMeal(rec, mealSlot.targetCalories);
+      return {
+        ...grounded,
+        imageUrl: resolveMealImageUrl(grounded.title, grounded.ingredients, grounded.tags),
+      };
+    });
   }
 
   // Fallback for empty fridge / generic mode
@@ -135,8 +153,8 @@ export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardPropo
       tags: ['High Protein', 'Echilibrat'],
       ingredients: [
         { name: 'Orez basmati', amount: '160g fiert', isPantryStock: true },
-        { name: 'Sursă slabă de proteine', amount: '180g', isPantryStock: true },
-        { name: 'Mix legume proaspete', amount: '120g', isPantryStock: true },
+        { name: 'Piept de pui', amount: '180g', isPantryStock: true },
+        { name: 'Spanac', amount: '100g', isPantryStock: true },
       ],
       instructions: [
         'Fierbe orezul conform instrucțiunilor.',
@@ -161,9 +179,9 @@ export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardPropo
       matchReason: 'Opțiune rapidă cu carbohidrați complecși și proteine consistente.',
       tags: ['Wrap Rapid', 'Crispy'],
       ingredients: [
-        { name: 'Lipie integrală', amount: '1 buc (60g)', isPantryStock: true },
-        { name: 'Brânză slabă / telemea', amount: '60g', isPantryStock: true },
-        { name: 'Verdețuri proaspete', amount: '40g', isPantryStock: true },
+        { name: 'Lipii integrale', amount: '1 buc (60g)', isPantryStock: true },
+        { name: 'Telemea', amount: '60g', isPantryStock: true },
+        { name: 'Spanac', amount: '40g', isPantryStock: true },
       ],
       instructions: [
         'Așază ingredientele pe lipie și împăturește strâns.',
@@ -172,8 +190,11 @@ export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardPropo
     },
   ];
 
-  return genericCards.map((rec) => ({
-    ...rec,
-    imageUrl: resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
-  }));
+  return genericCards.map((rec) => {
+    const grounded = recalculateAndGroundMeal(rec, mealSlot.targetCalories);
+    return {
+      ...grounded,
+      imageUrl: resolveMealImageUrl(grounded.title, grounded.ingredients, grounded.tags),
+    };
+  });
 }

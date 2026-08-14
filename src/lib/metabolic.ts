@@ -1,4 +1,4 @@
-import { ActivityLevel, Gender, Goal, UserProfile } from '@/types/nutrition';
+import { ActivityLevel, Gender, Goal, MealCategory, UserProfile } from '@/types/nutrition';
 
 export const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   sedentary: 1.2,
@@ -27,6 +27,80 @@ export interface MetabolicResult {
   proteinGrams: number;
   carbsGrams: number;
   fatGrams: number;
+}
+
+export interface MealSlotAllocation {
+  mealCategory: MealCategory;
+  slotRatio: number;
+  targetCalories: number;
+  targetProtein: number;
+  targetCarbs: number;
+  targetFat: number;
+  minCalories: number;
+  maxCalories: number;
+}
+
+export function calculateMealTargetSlot(
+  dailyCalorieTarget: number = 2100,
+  dailyProteinTarget: number = 160,
+  dailyCarbsTarget: number = 200,
+  dailyFatTarget: number = 65,
+  remainingCalories: number = 2100,
+  remainingProtein: number = 160,
+  remainingCarbs: number = 200,
+  remainingFat: number = 65,
+  category: MealCategory = 'lunch'
+): MealSlotAllocation {
+  const SLOT_RATIOS: Record<MealCategory, number> = {
+    breakfast: 0.28,
+    lunch: 0.36,
+    dinner: 0.28,
+    snack: 0.08,
+  };
+
+  const standardRatio = SLOT_RATIOS[category] || 0.30;
+
+  // Standard proportional portion of the daily target
+  const baseKcal = Math.round(dailyCalorieTarget * standardRatio);
+  const baseProt = Math.round(dailyProteinTarget * standardRatio);
+  const baseCarbs = Math.round(dailyCarbsTarget * standardRatio);
+  const baseFat = Math.round(dailyFatTarget * standardRatio);
+
+  // Realistic meal boundaries [350, 950] kcal for main meals, [150, 400] for snacks
+  const minKcal = category === 'snack' ? 150 : 350;
+  const maxKcal = category === 'snack' ? 400 : 900;
+
+  // Allocate realistic target for this specific plate
+  const targetKcal = Math.min(
+    maxKcal,
+    Math.max(minKcal, Math.min(baseKcal, remainingCalories > 0 ? remainingCalories : baseKcal))
+  );
+
+  const targetProt = Math.min(
+    75,
+    Math.max(15, Math.min(baseProt, remainingProtein > 0 ? remainingProtein : baseProt))
+  );
+
+  const targetCarbs = Math.min(
+    110,
+    Math.max(15, Math.min(baseCarbs, remainingCarbs > 0 ? remainingCarbs : baseCarbs))
+  );
+
+  const targetFat = Math.min(
+    35,
+    Math.max(6, Math.min(baseFat, remainingFat > 0 ? remainingFat : baseFat))
+  );
+
+  return {
+    mealCategory: category,
+    slotRatio: standardRatio,
+    targetCalories: targetKcal,
+    targetProtein: targetProt,
+    targetCarbs,
+    targetFat,
+    minCalories: Math.round(targetKcal * 0.85),
+    maxCalories: Math.round(targetKcal * 1.15),
+  };
 }
 
 export function calculateMetabolicTargets(

@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { MealCategory, PreSwipeContext, SwipeMode } from '@/types/nutrition';
 import { X, Sparkles, Plus, Check, Refrigerator, ShoppingCart, Utensils, Flame, Zap, Waves, CookingPot, Camera } from 'lucide-react';
+import { calculateMealTargetSlot } from '@/lib/metabolic';
 
 import { useSwipeDownSheet } from '@/lib/useSwipeDownSheet';
 
@@ -58,6 +59,18 @@ export function PreSwipeModal({
   const [scanSuccessMessage, setScanSuccessMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const currentSlot = calculateMealTargetSlot(
+    2100,
+    160,
+    200,
+    65,
+    remainingCalories,
+    remainingProtein,
+    remainingCarbs,
+    remainingFat,
+    mealCategory
+  );
 
   const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
     onClose,
@@ -154,7 +167,7 @@ export function PreSwipeModal({
           <div className="header-titles">
             <h3 className="modal-title">Filtrează Swipe Deck</h3>
             <span className="modal-sub">
-              Macro-uri țintă rămase: <strong className="tabular-num text-amber">{remainingCalories} kcal</strong> | <strong className="tabular-num text-emerald">{remainingProtein}g P</strong>
+              Țintă {mealCategory === 'breakfast' ? 'Mic Dejun' : mealCategory === 'lunch' ? 'Prânz' : mealCategory === 'dinner' ? 'Cină' : 'Gustare'}: <strong className="tabular-num text-amber">~{currentSlot.targetCalories} kcal</strong> | <strong className="tabular-num text-emerald">~{currentSlot.targetProtein}g P</strong> <span style={{ opacity: 0.75 }}>({remainingCalories} kcal rămase azi)</span>
             </span>
           </div>
           <button type="button" className="btn-close" onClick={onClose} aria-label="Închide">
