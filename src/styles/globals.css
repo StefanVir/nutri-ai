@@ -1,0 +1,177 @@
+@import './tokens.css';
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright);
+}
+
+/* Tabular numbers for macros */
+.tabular-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text Selection */
+::selection {
+  background-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  outline: none;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* App container - Mobile-First centered viewport on desktop */
+.app-shell {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, #151d34 0%, var(--bg-app) 70%);
+}
+
+.mobile-frame {
+  width: 100%;
+  max-width: var(--mobile-max-width);
+  min-height: 100vh;
+  background-color: var(--bg-surface);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
+  border-left: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 480px) {
+  .mobile-frame {
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+}
+
+.screen-content {
+  flex: 1;
+  padding: 18px 16px calc(var(--bottom-bar-height) + 20px) 16px;
+  overflow-y: auto;
+}
+
+/* Utilities */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-calories {
+  background: var(--macro-calories-bg);
+  color: var(--macro-calories);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.badge-protein {
+  background: var(--macro-protein-bg);
+  color: var(--macro-protein);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-carbs {
+  background: var(--macro-carbs-bg);
+  color: var(--macro-carbs);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.badge-fat {
+  background: var(--macro-fat-bg);
+  color: var(--macro-fat);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px var(--accent-primary-glow); }
+  50% { box-shadow: 0 0 30px var(--accent-primary-glow); }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-out-smooth) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp var(--duration-normal) var(--ease-out-smooth) forwards;
+}
