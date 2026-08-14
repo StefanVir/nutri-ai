@@ -366,7 +366,7 @@
    4. DAILY JOURNAL (DASHBOARD)
    ========================================= */
 .daily-journal-section {
-  padding: 0 16px 100px 16px;
+  padding: 0 16px 140px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -483,6 +483,52 @@
 .btn-cat-action:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
+}
+
+/* Photo Dropzone */
+.photo-scan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.photo-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 30px 16px;
+  background: rgba(99, 102, 241, 0.05);
+  border: 2px dashed rgba(99, 102, 241, 0.35);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: center;
+}
+
+.dropzone-icon-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drop-main {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.drop-sub {
+  font-size: 0.74rem;
+  color: var(--text-tertiary);
+  max-width: 280px;
+  line-height: 1.4;
+  margin: 0 auto;
 }
 
 /* =========================================
@@ -1174,3 +1220,75 @@
   justify-content: center;
   gap: 8px;
 }
+
+/* =========================================
+   6. SCREENS SPACING (AVOID DOCK OVERLAP)
+   ========================================= */
+.profile-screen {
+  padding: 16px 18px 140px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fav-screen {
+  padding: 16px 18px 140px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.swipe-idle-screen {
+  padding: 40px 20px 140px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 65vh;
+  text-align: center;
+  gap: 14px;
+}
+
+.idle-hero-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-full);
+  background: rgba(245, 158, 11, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.idle-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.idle-desc {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 320px;
+  margin-bottom: 6px;
+}
+
+.btn-start-swipe {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #06080d;
+  border-radius: var(--radius-md);
+  font-size: 0.94rem;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45);
+  transition: transform var(--duration-fast);
+}
+
+.btn-start-swipe:hover {
+  transform: translateY(-1px);
+}
+

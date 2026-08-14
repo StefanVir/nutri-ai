@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { UserProfile, MealCardProposal, LoggedMeal, MealCategory, PreSwipeContext } from '@/types/nutrition';
@@ -320,20 +320,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* TAB 3: QUICK LOG */}
-          {currentTab === 'quick_log' && (
-            <div className="quick-log-tab-view animate-fade-in">
-              <QuickLogModal
-                isOpen={true}
-                onClose={() => setCurrentTab('dashboard')}
-                onSaveQuickMeal={(m) => {
-                  handleAddQuickLogMeal(m);
-                  setCurrentTab('dashboard');
-                }}
-              />
-            </div>
-          )}
-
           {/* TAB 4: ADAPTIVE FAVORITES */}
           {currentTab === 'favorites' && (
             <AdaptiveFavoritesModal
@@ -354,44 +340,57 @@ export default function Home() {
               profile={profile}
               onUpdateProfile={saveProfile}
               onResetOnboarding={() => {
-                setProfile(null);
                 localStorage.removeItem(LOCAL_STORAGE_KEY_PROFILE);
+                setProfile(null);
               }}
             />
           )}
         </main>
 
-        {/* Floating Modals */}
-        <PreSwipeModal
-          isOpen={isPreSwipeModalOpen}
-          onClose={() => setIsPreSwipeModalOpen(false)}
-          onLaunch={handleLaunchSwipe}
-          remainingCalories={remainingCalories}
-          remainingProtein={remainingProtein}
-          remainingCarbs={remainingCarbs}
-          remainingFat={remainingFat}
-          currentCategory={preSwipeCategory}
-        />
+        {/* Global Floating Glass Dock (Hidden when modal or sheet is open) */}
+        {!isQuickLogOpen && !isPreSwipeModalOpen && !detailRecipe && (
+          <BottomNavigation
+            currentTab={currentTab}
+            onTabChange={(tab) => {
+              if (tab === 'quick_log') {
+                setIsQuickLogOpen(true);
+              } else {
+                setCurrentTab(tab);
+              }
+            }}
+            shortlistCount={shortlistedMeals.length}
+          />
+        )}
 
-        <RecipeBottomSheet
-          recipe={detailRecipe}
-          isOpen={!!detailRecipe}
-          onClose={() => setDetailRecipe(null)}
-          onCookAndLog={handleCookAndLogFromSheet}
-        />
-
+        {/* TOP-LEVEL MODALS */}
         <QuickLogModal
           isOpen={isQuickLogOpen}
           onClose={() => setIsQuickLogOpen(false)}
           onSaveQuickMeal={handleAddQuickLogMeal}
         />
 
-        {/* Persistent Bottom Bar */}
-        <BottomNavigation
-          currentTab={currentTab}
-          onTabChange={(tab) => setCurrentTab(tab)}
-          shortlistCount={shortlistedMeals.length}
+        <PreSwipeModal
+          isOpen={isPreSwipeModalOpen}
+          userProfile={profile}
+          defaultCategory={preSwipeCategory}
+          remainingCalories={remainingCalories}
+          remainingProtein={remainingProtein}
+          remainingCarbs={remainingCarbs}
+          remainingFat={remainingFat}
+          onClose={() => setIsPreSwipeModalOpen(false)}
+          onLaunch={handleLaunchSwipe}
         />
+
+        {detailRecipe && (
+          <RecipeBottomSheet
+            recipe={detailRecipe}
+            onClose={() => setDetailRecipe(null)}
+            onCookAndLog={(rec) => {
+              handleCookAndLogFromSheet(rec);
+              setDetailRecipe(null);
+            }}
+          />
+        )}
       </div>
 
       <style jsx>{`

@@ -42,7 +42,7 @@ export function MacroRings({
         <div className="hero-energy-info">
           <span className="energy-badge">
             <Flame size={14} className="flame-icon-amber" />
-            <span>Buget Caloric de Azi</span>
+            <span>Buget Caloric Zilnic</span>
           </span>
           <div className="energy-main-val">
             <span className="num-huge tabular-num">{remainingCalories}</span>
@@ -52,7 +52,7 @@ export function MacroRings({
 
         <div className="energy-target-meta">
           <span className="meta-tag tabular-num">{consumedCalories} / {calorieTarget} kcal</span>
-          <span className="meta-pct tabular-num">{calPercent}% consumat</span>
+          <span className="meta-pct tabular-num">{calPercent}% atins</span>
         </div>
       </div>
 
@@ -73,11 +73,11 @@ export function MacroRings({
               <Dumbbell size={13} className="text-prot" />
               <span className="tile-name">Proteine</span>
             </div>
-            <span className="tile-rem-badge tabular-num">-{proteinRemaining}g</span>
+            <span className="tile-target-badge tabular-num">țintă {proteinTarget}g</span>
           </div>
           <div className="tile-values tabular-num">
-            <strong className="val-main text-prot">{consumedProtein}</strong>
-            <span className="val-target">/{proteinTarget}g</span>
+            <strong className="val-main text-prot">{consumedProtein}g</strong>
+            <span className="val-rem">-{proteinRemaining}g</span>
           </div>
           <div className="tile-bar-track">
             <div className="tile-bar-fill fill-prot" style={{ width: `${proteinPercent}%` }} />
@@ -91,11 +91,11 @@ export function MacroRings({
               <Wheat size={13} className="text-carb" />
               <span className="tile-name">Carbo</span>
             </div>
-            <span className="tile-rem-badge tabular-num">-{carbsRemaining}g</span>
+            <span className="tile-target-badge tabular-num">țintă {carbsTarget}g</span>
           </div>
           <div className="tile-values tabular-num">
-            <strong className="val-main text-carb">{consumedCarbs}</strong>
-            <span className="val-target">/{carbsTarget}g</span>
+            <strong className="val-main text-carb">{consumedCarbs}g</strong>
+            <span className="val-rem">-{carbsRemaining}g</span>
           </div>
           <div className="tile-bar-track">
             <div className="tile-bar-fill fill-carb" style={{ width: `${carbsPercent}%` }} />
@@ -109,11 +109,11 @@ export function MacroRings({
               <Droplet size={13} className="text-fat" />
               <span className="tile-name">Grăsimi</span>
             </div>
-            <span className="tile-rem-badge tabular-num">-{fatRemaining}g</span>
+            <span className="tile-target-badge tabular-num">țintă {fatTarget}g</span>
           </div>
           <div className="tile-values tabular-num">
-            <strong className="val-main text-fat">{consumedFat}</strong>
-            <span className="val-target">/{fatTarget}g</span>
+            <strong className="val-main text-fat">{consumedFat}g</strong>
+            <span className="val-rem">-{fatRemaining}g</span>
           </div>
           <div className="tile-bar-track">
             <div className="tile-bar-fill fill-fat" style={{ width: `${fatPercent}%` }} />
