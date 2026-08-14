@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
-import { Home, Sparkles, PlusCircle, Bookmark, User } from 'lucide-react';
+import { Home, Sparkles, Camera, Bookmark, User } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'swipe' | 'quick_log' | 'favorites' | 'profile';
 
@@ -13,159 +13,70 @@ interface BottomNavigationProps {
 
 export function BottomNavigation({ currentTab, onTabChange, shortlistCount = 0 }: BottomNavigationProps) {
   return (
-    <nav className="bottom-nav-container">
-      <div className="bottom-nav-glass">
+    <nav className="floating-dock-wrap">
+      <div className="floating-dock-glass">
+        {/* Tab 1: Dashboard */}
         <button
           type="button"
-          className={`nav-item ${currentTab === 'dashboard' ? 'active' : ''}`}
+          className={`dock-btn ${currentTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => onTabChange('dashboard')}
           aria-label="Dashboard"
         >
-          <div className="icon-box">
-            <Home size={20} />
-          </div>
-          <span className="nav-label">Acasă</span>
+          <Home size={20} />
+          <span className="dock-label">Acasă</span>
         </button>
 
+        {/* Tab 2: Swipe */}
         <button
           type="button"
-          className={`nav-item ${currentTab === 'swipe' ? 'active' : ''}`}
+          className={`dock-btn ${currentTab === 'swipe' ? 'active' : ''}`}
           onClick={() => onTabChange('swipe')}
           aria-label="Swipe Deck"
         >
-          <div className="icon-box">
-            <Sparkles size={20} className="swipe-sparkle-icon" />
+          <div className="icon-with-badge">
+            <Sparkles size={20} className="sparkle-accent" />
             {shortlistCount > 0 && (
-              <span className="badge-bubble tabular-num">{shortlistCount}</span>
+              <span className="dock-badge tabular-num">{shortlistCount}</span>
             )}
           </div>
-          <span className="nav-label">Swipe</span>
+          <span className="dock-label">Swipe</span>
         </button>
 
+        {/* CENTER ACTION BUTTON: Scan / Log (Elevated FAB) */}
         <button
           type="button"
-          className={`nav-item ${currentTab === 'quick_log' ? 'active' : ''}`}
+          className="dock-fab-center"
           onClick={() => onTabChange('quick_log')}
-          aria-label="Quick Food Log"
+          aria-label="Scanează mâncarea cu AI Vision"
         >
-          <div className="icon-box plus-box">
-            <PlusCircle size={22} />
+          <div className="fab-circle-glow">
+            <Camera size={22} className="fab-icon" />
           </div>
-          <span className="nav-label">Log AI</span>
+          <span className="fab-sub-label">Scan AI</span>
         </button>
 
+        {/* Tab 4: Favorites */}
         <button
           type="button"
-          className={`nav-item ${currentTab === 'favorites' ? 'active' : ''}`}
+          className={`dock-btn ${currentTab === 'favorites' ? 'active' : ''}`}
           onClick={() => onTabChange('favorites')}
           aria-label="Adaptive Favorites"
         >
-          <div className="icon-box">
-            <Bookmark size={20} />
-          </div>
-          <span className="nav-label">Favorite</span>
+          <Bookmark size={20} />
+          <span className="dock-label">Favorite</span>
         </button>
 
+        {/* Tab 5: Profile */}
         <button
           type="button"
-          className={`nav-item ${currentTab === 'profile' ? 'active' : ''}`}
+          className={`dock-btn ${currentTab === 'profile' ? 'active' : ''}`}
           onClick={() => onTabChange('profile')}
           aria-label="Profil"
         >
-          <div className="icon-box">
-            <User size={20} />
-          </div>
-          <span className="nav-label">Profil</span>
+          <User size={20} />
+          <span className="dock-label">Profil</span>
         </button>
       </div>
-
-      <style jsx>{`
-        .bottom-nav-container {
-          position: fixed;
-          bottom: 0;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100%;
-          max-width: var(--mobile-max-width);
-          padding: 8px 12px var(--safe-bottom) 12px;
-          z-index: 50;
-          pointer-events: none;
-        }
-
-        .bottom-nav-glass {
-          pointer-events: auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-around;
-          background: rgba(12, 16, 26, 0.88);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid var(--border-medium);
-          border-radius: var(--radius-full);
-          padding: 6px 4px;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 3px;
-          padding: 6px 12px;
-          border-radius: var(--radius-full);
-          color: var(--text-tertiary);
-          transition: all var(--duration-fast) var(--ease-out-smooth);
-        }
-
-        .nav-item:hover {
-          color: var(--text-secondary);
-        }
-
-        .nav-item.active {
-          color: var(--macro-calories);
-        }
-
-        .icon-box {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 28px;
-          height: 28px;
-        }
-
-        .plus-box {
-          color: var(--accent-primary);
-        }
-
-        .nav-item.active .plus-box {
-          color: var(--macro-calories);
-        }
-
-        .badge-bubble {
-          position: absolute;
-          top: -3px;
-          right: -6px;
-          background: var(--macro-protein);
-          color: #061e14;
-          font-size: 0.65rem;
-          font-weight: 800;
-          width: 16px;
-          height: 16px;
-          border-radius: var(--radius-full);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 6px rgba(16, 185, 129, 0.5);
-        }
-
-        .nav-label {
-          font-size: 0.68rem;
-          font-weight: 700;
-          letter-spacing: 0.01em;
-        }
-      `}</style>
     </nav>
   );
 }

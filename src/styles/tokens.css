@@ -1,76 +1,74 @@
-﻿:root {
-  /* Surface & Base Palette (Obsidian Athletic Dark) */
-  --bg-app: #06080d;
-  --bg-surface: #0c101a;
-  --bg-surface-raised: #121826;
-  --bg-card: #161e31;
-  --bg-card-hover: #1c263d;
-  --bg-card-active: #222e49;
-  --bg-glass: rgba(12, 16, 26, 0.88);
-  --bg-glass-card: rgba(22, 30, 49, 0.75);
+:root {
+  /* Surfaces & Backgrounds (Dark Obsidian Athletics) */
+  --bg-app: #07090e;
+  --bg-surface: #0d121d;
+  --bg-surface-raised: #131927;
+  --bg-card: #182032;
+  --bg-card-hover: #1f2940;
+  --bg-glass: rgba(13, 18, 29, 0.85);
+  --bg-glass-card: rgba(24, 32, 50, 0.75);
 
-  /* Borders & Dividers */
-  --border-subtle: rgba(255, 255, 255, 0.06);
+  /* Subtle Crisp Borders */
+  --border-subtle: rgba(255, 255, 255, 0.07);
   --border-medium: rgba(255, 255, 255, 0.12);
   --border-bright: rgba(255, 255, 255, 0.22);
   --border-focus: #6366f1;
 
-  /* Typography & Foreground */
+  /* Typography Colors */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
   --text-muted: #475569;
-  --text-inverse: #06080d;
+  --text-inverse: #07090e;
 
-  /* Brand & Macro Semantics (High Dynamic Range) */
-  --accent-primary: #6366f1;
-  --accent-primary-hover: #4f46e5;
-  --accent-primary-glow: rgba(99, 102, 241, 0.28);
-
+  /* High Dynamic Range Macro Colors */
   --macro-calories: #f59e0b;
   --macro-calories-bg: rgba(245, 158, 11, 0.14);
-  --macro-calories-glow: rgba(245, 158, 11, 0.35);
+  --macro-calories-glow: rgba(245, 158, 11, 0.3);
 
   --macro-protein: #10b981;
   --macro-protein-bg: rgba(16, 185, 129, 0.14);
-  --macro-protein-glow: rgba(16, 185, 129, 0.35);
+  --macro-protein-glow: rgba(16, 185, 129, 0.3);
 
-  --macro-carbs: #06b6d4;
-  --macro-carbs-bg: rgba(6, 182, 212, 0.14);
-  --macro-carbs-glow: rgba(6, 182, 212, 0.35);
+  --macro-carbs: #38bdf8;
+  --macro-carbs-bg: rgba(56, 189, 248, 0.14);
+  --macro-carbs-glow: rgba(56, 189, 248, 0.3);
 
-  --macro-fat: #f43f5e;
-  --macro-fat-bg: rgba(244, 63, 94, 0.14);
-  --macro-fat-glow: rgba(244, 63, 94, 0.35);
+  --macro-fat: #fb7185;
+  --macro-fat-bg: rgba(251, 113, 133, 0.14);
+  --macro-fat-glow: rgba(251, 113, 133, 0.3);
 
-  /* Status */
-  --status-success: #10b981;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
-  --status-info: #3b82f6;
+  /* Brand Accents */
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-primary-glow: rgba(99, 102, 241, 0.35);
 
-  /* Natural Diffuse Shadows */
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.7), 0 4px 10px rgba(0, 0, 0, 0.4);
-  --shadow-card-drag: 0 24px 48px rgba(0, 0, 0, 0.85), 0 6px 16px rgba(0, 0, 0, 0.6);
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.8);
 
   /* Radii */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
   --radius-xl: 28px;
   --radius-full: 9999px;
 
-  /* Motion & Spring Physics */
+  /* Easing */
   --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
-  --duration-slow: 400ms;
 
-  /* Dimensions & Spacing */
+  /* Layout Boundaries */
   --mobile-max-width: 440px;
-  --bottom-bar-height: 72px;
+  --bottom-bar-height: 76px;
   --safe-bottom: env(safe-area-inset-bottom, 16px);
+
+  /* Z-Index Hierarchy */
+  --z-base: 0;
+  --z-content: 1;
+  --z-header: 100;
+  --z-nav: 300;
+  --z-modal: 500;
 }
