@@ -17,6 +17,7 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { CookingMethod, COOKING_METHOD_OFFSETS, groundNutritionalItem } from '@/lib/nutritionDb';
+import { useSwipeDownSheet } from '@/lib/useSwipeDownSheet';
 
 interface QuickLogModalProps {
   isOpen: boolean;
@@ -58,6 +59,11 @@ export function QuickLogModal({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [photoHint, setPhotoHint] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
+    onClose,
+    isOpen,
+  });
 
   // Human-in-the-loop interactive items state
   const [mealTitle, setMealTitle] = useState('');
@@ -287,11 +293,14 @@ export function QuickLogModal({
   };
 
   return (
-    <div className="modal-backdrop animate-fade-in" onClick={onClose}>
-      <div className="modal-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
-        <div className="sheet-drag-handle" />
+    <div className="modal-backdrop animate-fade-in" onClick={onClose} style={backdropStyle}>
+      <div className="modal-sheet animate-slide-up" onClick={(e) => e.stopPropagation()} style={sheetStyle}>
+        {/* Touch Handle Zone */}
+        <div className="sheet-drag-handle-touch-zone" {...dragProps}>
+          <div className="sheet-drag-handle" />
+        </div>
 
-        <div className="modal-header">
+        <div className="modal-header" {...dragProps}>
           <div className="header-titles">
             <h3 className="modal-title">Scanare Masă & Calibrare AI</h3>
             <span className="modal-sub">Identificare Vizuală • Bază USDA • Reglare Gramaje</span>
@@ -321,7 +330,7 @@ export function QuickLogModal({
           </button>
         </div>
 
-        <div className="modal-body-scroll">
+        <div className="modal-body-scroll" ref={scrollRef}>
           {/* Category & Cooking Method Row */}
           <div className="config-grid-box">
             <div className="config-row">

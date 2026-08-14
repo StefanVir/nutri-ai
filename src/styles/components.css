@@ -568,7 +568,37 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.sheet-drag-handle { display: none; }
+.sheet-drag-handle-touch-zone {
+  width: 100%;
+  padding: 12px 0 6px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sheet-drag-handle-touch-zone:active {
+  cursor: grabbing;
+}
+
+.sheet-drag-handle {
+  display: block;
+  width: 44px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-full);
+  margin: 0 auto;
+  transition: background 0.15s, width 0.15s;
+}
+
+.sheet-drag-handle-touch-zone:hover .sheet-drag-handle,
+.sheet-drag-handle-touch-zone:active .sheet-drag-handle {
+  background: rgba(255, 255, 255, 0.55);
+  width: 52px;
+}
 
 @media (max-width: 640px) {
   .modal-backdrop {
@@ -590,26 +620,19 @@
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
   }
-
-  .sheet-drag-handle {
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.22);
-    border-radius: var(--radius-full);
-    margin: 10px auto 4px auto;
-    flex-shrink: 0;
-  }
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 12px 18px 14px 18px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
 }
 
 .header-titles {

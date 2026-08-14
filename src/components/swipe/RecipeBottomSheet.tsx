@@ -1,8 +1,10 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { MealCardProposal } from '@/types/nutrition';
 import { X, Clock, Check, Utensils, ListOrdered } from 'lucide-react';
+
+import { useSwipeDownSheet } from '@/lib/useSwipeDownSheet';
 
 interface RecipeBottomSheetProps {
   recipe: MealCardProposal | null;
@@ -17,16 +19,23 @@ export function RecipeBottomSheet({
   onClose,
   onCookAndLog,
 }: RecipeBottomSheetProps) {
+  const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
+    onClose,
+    isOpen: isOpen && !!recipe,
+  });
+
   if (!isOpen || !recipe) return null;
 
   return (
-    <div className="sheet-overlay animate-fade-in" onClick={onClose}>
-      <div className="sheet-panel animate-slide-up" onClick={(e) => e.stopPropagation()}>
-        {/* Top Drag Handle */}
-        <div className="sheet-drag-handle" />
+    <div className="sheet-overlay animate-fade-in" onClick={onClose} style={backdropStyle}>
+      <div className="sheet-panel animate-slide-up" onClick={(e) => e.stopPropagation()} style={sheetStyle}>
+        {/* Top Drag Handle Touch Zone */}
+        <div className="sheet-drag-handle-touch-zone" {...dragProps}>
+          <div className="sheet-drag-handle" />
+        </div>
 
         {/* Header */}
-        <div className="sheet-header">
+        <div className="sheet-header" {...dragProps}>
           <div className="header-tags-row">
             <span className="mode-chip">{recipe.mode === 'fridge' ? 'Din Frigider' : 'Smart Grocery'}</span>
             <div className="time-pill">
@@ -63,7 +72,7 @@ export function RecipeBottomSheet({
         </div>
 
         {/* Scrollable Ingredients & Steps */}
-        <div className="sheet-scroll-body">
+        <div className="sheet-scroll-body" ref={scrollRef}>
           {/* Ingredients Section */}
           <div className="recipe-section">
             <div className="section-head">
@@ -152,21 +161,46 @@ export function RecipeBottomSheet({
             overflow: hidden;
           }
 
-          .sheet-drag-handle {
-            width: 36px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: var(--radius-full);
-            margin: 10px auto 4px auto;
+          .sheet-drag-handle-touch-zone {
+            width: 100%;
+            padding: 12px 0 6px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
             flex-shrink: 0;
+          }
+
+          .sheet-drag-handle-touch-zone:active {
+            cursor: grabbing;
+          }
+
+          .sheet-drag-handle {
+            width: 44px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.28);
+            border-radius: var(--radius-full);
+            margin: 0 auto;
+            transition: background 0.15s, width 0.15s;
+          }
+
+          .sheet-drag-handle-touch-zone:hover .sheet-drag-handle,
+          .sheet-drag-handle-touch-zone:active .sheet-drag-handle {
+            background: rgba(255, 255, 255, 0.55);
+            width: 52px;
           }
 
           .sheet-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 18px;
+            padding: 8px 18px 10px 18px;
             flex-shrink: 0;
+            cursor: grab;
+            user-select: none;
+            touch-action: pan-y;
           }
 
           .header-tags-row {

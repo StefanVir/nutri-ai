@@ -1,8 +1,10 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { MealCategory, PreSwipeContext, SwipeMode } from '@/types/nutrition';
 import { X, Sparkles, Plus, Check, Refrigerator, ShoppingCart, Utensils, Flame, Zap, Waves, CookingPot } from 'lucide-react';
+
+import { useSwipeDownSheet } from '@/lib/useSwipeDownSheet';
 
 interface PreSwipeModalProps {
   isOpen: boolean;
@@ -50,6 +52,11 @@ export function PreSwipeModal({
   const [maxBudgetRon, setMaxBudgetRon] = useState<number>(30);
   const [customItem, setCustomItem] = useState('');
 
+  const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
+    onClose,
+    isOpen,
+  });
+
   if (!isOpen) return null;
 
   const toggleIngredient = (item: string) => {
@@ -95,13 +102,15 @@ export function PreSwipeModal({
   };
 
   return (
-    <div className="modal-backdrop animate-fade-in" onClick={onClose}>
-      <div className="modal-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
-        {/* Drag Handle Bar */}
-        <div className="sheet-drag-handle" />
+    <div className="modal-backdrop animate-fade-in" onClick={onClose} style={backdropStyle}>
+      <div className="modal-sheet animate-slide-up" onClick={(e) => e.stopPropagation()} style={sheetStyle}>
+        {/* Drag Handle Touch Zone */}
+        <div className="sheet-drag-handle-touch-zone" {...dragProps}>
+          <div className="sheet-drag-handle" />
+        </div>
 
-        {/* Header */}
-        <div className="modal-header">
+        {/* Header with swipe down affordance */}
+        <div className="modal-header" {...dragProps}>
           <div className="header-titles">
             <h3 className="modal-title">Filtrează Swipe Deck</h3>
             <span className="modal-sub">
@@ -114,7 +123,7 @@ export function PreSwipeModal({
         </div>
 
         {/* Scrollable Form Body */}
-        <div className="modal-body-scroll">
+        <div className="modal-body-scroll" ref={scrollRef}>
           {/* Category Selector */}
           <div className="config-section">
             <span className="section-label">Pentru ce masă?</span>
