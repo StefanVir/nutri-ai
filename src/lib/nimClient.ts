@@ -4,24 +4,48 @@ import { MealCardDeckSchema, QuickLogOutputSchema, QuickLogOutput } from './sche
 import { filterOrGenerateRecipes } from './mockRecipes';
 import { resolveMealImageUrl } from './foodImages';
 import { calculateMealTargetSlot } from './metabolic';
-import { recalculateAndGroundMeal } from './nutritionDb';
+import { recalculateAndGroundMeal, groundNutritionalItem, CookingMethod } from './nutritionDb';
 import { buildCulinaryArchetypes } from './culinaryEngine';
 import { lintAndRepairRecipe } from './culinaryLinter';
 
-// NVIDIA NIM OpenAI-Compatible Endpoint
-const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const FAST_DECK_MODEL = 'meta/llama-3.1-8b-instruct';
-const HIGH_CAPACITY_MODEL = 'meta/llama-3.3-70b-instruct';
-const PRIMARY_MODEL = FAST_DECK_MODEL;
+export interface AIProviderConfig {
+  client: OpenAI;
+  provider: 'groq' | 'nvidia';
+  flagshipRecipeModel: string;
+  fastModel: string;
+  visionModel: string;
+}
 
-function getOpenAIClient(): OpenAI | null {
-  const apiKey = process.env.NVIDIA_NIM_API_KEY;
-  if (!apiKey) return null;
+export function getActiveAIProvider(): AIProviderConfig | null {
+  const groqKey = process.env.GROQ_API_KEY?.trim();
+  if (groqKey && groqKey !== 'gsk_your_groq_api_key_here' && groqKey.startsWith('gsk_')) {
+    return {
+      client: new OpenAI({
+        apiKey: groqKey,
+        baseURL: 'https://api.groq.com/openai/v1',
+      }),
+      provider: 'groq',
+      flagshipRecipeModel: 'llama-3.3-70b-versatile',
+      fastModel: 'llama-3.1-8b-instant',
+      visionModel: 'llama-3.2-11b-vision-preview',
+    };
+  }
 
-  return new OpenAI({
-    apiKey,
-    baseURL: NVIDIA_BASE_URL,
-  });
+  const nimKey = process.env.NVIDIA_NIM_API_KEY?.trim();
+  if (nimKey && nimKey !== 'your_nvidia_nim_api_key_here') {
+    return {
+      client: new OpenAI({
+        apiKey: nimKey,
+        baseURL: 'https://integrate.api.nvidia.com/v1',
+      }),
+      provider: 'nvidia',
+      flagshipRecipeModel: 'meta/llama-3.1-8b-instruct',
+      fastModel: 'meta/llama-3.1-8b-instruct',
+      visionModel: 'meta/llama-3.2-11b-vision-instruct',
+    };
+  }
+
+  return null;
 }
 
 function parseJsonResponse(raw: string): any {
@@ -45,7 +69,7 @@ function parseJsonResponse(raw: string): any {
 }
 
 export async function generateNIMMealDeck(context: PreSwipeContext): Promise<MealCardProposal[]> {
-  const client = getOpenAIClient();
+  const ai = getActiveAIProvider();
 
   // Tier 1: Top-Down Dynamic Meal Slot Partitioning
   const mealSlot = calculateMealTargetSlot(
@@ -60,7 +84,7 @@ export async function generateNIMMealDeck(context: PreSwipeContext): Promise<Mea
     context.mealCategory || 'lunch'
   );
 
-  if (!client) {
+  if (!ai) {
     return filterOrGenerateRecipes(context);
   }
 
@@ -71,6 +95,10 @@ export async function generateNIMMealDeck(context: PreSwipeContext): Promise<Mea
   const appliancesStr = context.appliances && context.appliances.length > 0
     ? context.appliances.join(', ')
     : 'Bucătărie standard (aragaz/cuptor/airfryer)';
+
+  // Build 3 distinct culinary archetypes to enforce protein isolation
+  const archetypes = buildCulinaryArchetypes(context.fridgeIngredients || [], context.appliances || []);
+  const archetypeGuide = archetypes.map((a, i) => `Rețeta ${i + 1}: ${a.suggestedDishTitle} (Proteină erou: ${a.heroProtein}, Ingrediente cheie: ${a.complementaryIngredients.join(', ')})`).join('\n');
 
   const systemPrompt = `You are a Master Executive Chef & Sports Nutritionist for NutriAI.
 You create 3 DISTINCT, CULINARILY COHERENT, and DELICIOUS single-meal recipes in Romanian based on the user's available pantry:
@@ -150,10 +178,6 @@ The response MUST be ONLY valid JSON matching this schema:
   ]
 }`;
 
-  // Build 3 distinct culinary archetypes to enforce protein isolation
-  const archetypes = buildCulinaryArchetypes(context.fridgeIngredients || [], context.appliances || []);
-  const archetypeGuide = archetypes.map((a, i) => `Rețeta ${i + 1}: ${a.suggestedDishTitle} (Proteină erou: ${a.heroProtein}, Ingrediente cheie: ${a.complementaryIngredients.join(', ')})`).join('\n');
-
   const userPrompt = `Ingrediente disponibile în bucătărie: ${ingredientsListStr}.
 Echipamente disponibile: ${appliancesStr}.
 Mod: ${context.mode}.
@@ -162,18 +186,17 @@ Mod: ${context.mode}.
 Generează 3 rețete gourmet diferite, respectând această separare a proteinelor erou:
 ${archetypeGuide}`;
 
-  // Try fast 8B model first, fallback to high capacity model
-  const modelsToTry = [FAST_DECK_MODEL, HIGH_CAPACITY_MODEL];
+  const modelsToTry = [ai.flagshipRecipeModel, ai.fastModel];
 
   for (const model of modelsToTry) {
     try {
-      const completion = await client.chat.completions.create({
+      const completion = await ai.client.chat.completions.create({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.3,
+        temperature: 0.25,
         max_tokens: 1800,
       });
 
@@ -204,9 +227,9 @@ ${archetypeGuide}`;
 }
 
 export async function parseQuickAILog(textDescription: string): Promise<QuickLogOutput> {
-  const client = getOpenAIClient();
+  const ai = getActiveAIProvider();
 
-  if (!client) {
+  if (!ai) {
     return {
       title: textDescription.slice(0, 35),
       calories: 380,
@@ -229,8 +252,8 @@ Respond STRICTLY in valid JSON:
 }`;
 
   try {
-    const completion = await client.chat.completions.create({
-      model: PRIMARY_MODEL,
+    const completion = await ai.client.chat.completions.create({
+      model: ai.fastModel,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Analizează preparatul: "${textDescription}"` },
@@ -270,8 +293,6 @@ Respond STRICTLY in valid JSON:
   }
 }
 
-import { groundNutritionalItem, CookingMethod } from './nutritionDb';
-
 export async function analyzeFoodImageWithNIM(
   imageBase64: string,
   userHint?: string,
@@ -303,9 +324,9 @@ export async function analyzeFoodImageWithNIM(
   }[];
   confidenceNotes: string;
 }> {
-  const client = getOpenAIClient();
+  const ai = getActiveAIProvider();
 
-  if (!client) {
+  if (!ai) {
     // Offline / Fallback grounded items
     const item1 = groundNutritionalItem('Biban de mare la grătar', 160, cookingMethod);
     const item2 = groundNutritionalItem('Cartofi dulci', 120, cookingMethod);
@@ -399,8 +420,8 @@ Respond STRICTLY in valid JSON adhering to this schema:
     : 'Analizează această imagine folosind raționamentul spațial și dimensional. Măsoară proporțiile pe baza ancorelor vizuale, estimează dimensiunile (L x l x grosime) și deduce gramajele fiecărui aliment și băutură.';
 
   try {
-    const completion = await client.chat.completions.create({
-      model: 'meta/llama-3.2-11b-vision-instruct',
+    const completion = await ai.client.chat.completions.create({
+      model: ai.visionModel,
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -460,7 +481,7 @@ Respond STRICTLY in valid JSON adhering to this schema:
       confidenceNotes: rawJson.confidenceNotes || 'Analiză spațială și dimensională calibrată USDA.',
     };
   } catch (err: any) {
-    console.error('Vision spatial reasoning error on NIM:', err);
+    console.error('Vision spatial reasoning error:', err);
     // Robust grounded fallback
     const fb = groundNutritionalItem('Mâncare gătită', 250, cookingMethod);
     return {
@@ -486,8 +507,8 @@ Respond STRICTLY in valid JSON adhering to this schema:
 }
 
 export async function scanFridgeImageWithNIM(imageBase64: string): Promise<string[]> {
-  const client = getOpenAIClient();
-  if (!client) {
+  const ai = getActiveAIProvider();
+  if (!ai) {
     return ['Ouă', 'Piept de pui', 'Spanac', 'Telemea', 'Roșii'];
   }
 
@@ -498,11 +519,11 @@ Respond STRICTLY in valid JSON matching this schema:
   "detectedIngredients": ["Somon", "Ouă", "Spanac", "Telemea", "Cartofi"]
 }`;
 
-  const visionModels = ['meta/llama-3.2-11b-vision-instruct', 'meta/llama-3.2-90b-vision-instruct'];
+  const visionModels = [ai.visionModel, 'meta/llama-3.2-11b-vision-instruct'];
 
   for (const model of visionModels) {
     try {
-      const res = await client.chat.completions.create({
+      const res = await ai.client.chat.completions.create({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -532,7 +553,3 @@ Respond STRICTLY in valid JSON matching this schema:
 
   return ['Ouă', 'Piept de pui', 'Spanac', 'Telemea'];
 }
-
-
-
-
