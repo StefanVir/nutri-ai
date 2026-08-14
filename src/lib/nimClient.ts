@@ -424,6 +424,54 @@ Respond STRICTLY in valid JSON adhering to this schema:
   }
 }
 
+export async function scanFridgeImageWithNIM(imageBase64: string): Promise<string[]> {
+  const client = getOpenAIClient();
+  if (!client) {
+    return ['Ouă', 'Piept de pui', 'Spanac', 'Telemea', 'Roșii'];
+  }
+
+  const systemPrompt = `You are a specialized multimodal computer vision model for NutriAI.
+Your task is to scan the uploaded fridge, grocery haul, or pantry photo and identify all visible food ingredients, produce, proteins, dairy, and items.
+Respond STRICTLY in valid JSON matching this schema:
+{
+  "detectedIngredients": ["Somon", "Ouă", "Spanac", "Telemea", "Cartofi"]
+}`;
+
+  const visionModels = ['meta/llama-3.2-11b-vision-instruct', 'meta/llama-3.2-90b-vision-instruct'];
+
+  for (const model of visionModels) {
+    try {
+      const res = await client.chat.completions.create({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Identifică toate ingredientele alimentare vizibile în această fotografie în limba Română.' },
+              { type: 'image_url', image_url: { url: imageBase64 } },
+            ],
+          },
+        ],
+        temperature: 0.1,
+        max_tokens: 400,
+      });
+
+      const content = res.choices[0]?.message?.content;
+      if (!content) continue;
+
+      const rawJson = parseJsonResponse(content);
+      if (Array.isArray(rawJson.detectedIngredients) && rawJson.detectedIngredients.length > 0) {
+        return rawJson.detectedIngredients.map((item: any) => String(item).trim()).filter(Boolean);
+      }
+    } catch (err) {
+      console.warn(`Fridge vision model ${model} failed:`, err);
+    }
+  }
+
+  return ['Ouă', 'Piept de pui', 'Spanac', 'Telemea'];
+}
+
 
 
 

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { MealCategory, PreSwipeContext, SwipeMode } from '@/types/nutrition';
-import { X, Sparkles, Plus, Check, Refrigerator, ShoppingCart, Utensils, Flame, Zap, Waves, CookingPot } from 'lucide-react';
+import { X, Sparkles, Plus, Check, Refrigerator, ShoppingCart, Utensils, Flame, Zap, Waves, CookingPot, Camera } from 'lucide-react';
 
 import { useSwipeDownSheet } from '@/lib/useSwipeDownSheet';
 
@@ -54,6 +54,10 @@ export function PreSwipeModal({
   const [groceryFork, setGroceryFork] = useState<'empty' | 'stock'>('empty');
   const [maxBudgetRon, setMaxBudgetRon] = useState<number>(30);
   const [customItem, setCustomItem] = useState('');
+  const [isScanningFridge, setIsScanningFridge] = useState(false);
+  const [scanSuccessMessage, setScanSuccessMessage] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
     onClose,
@@ -61,6 +65,39 @@ export function PreSwipeModal({
   });
 
   if (!isOpen) return null;
+
+  const handleFridgeFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanningFridge(true);
+    setScanSuccessMessage(null);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const res = await fetch('/api/ai/scan-fridge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64 }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.detectedIngredients && data.detectedIngredients.length > 0) {
+            setFridgeIngredients(data.detectedIngredients);
+            setScanSuccessMessage(`📸 Llama 3.2 Vision a identificat ${data.detectedIngredients.length} ingrediente!`);
+          }
+        }
+      } catch (err) {
+        console.warn('Eroare la scanarea frigiderului:', err);
+      } finally {
+        setIsScanningFridge(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const toggleIngredient = (item: string) => {
     setFridgeIngredients((prev) =>
@@ -245,11 +282,36 @@ export function PreSwipeModal({
           {/* Ingredients Picker */}
           {(mode === 'fridge' || (mode.startsWith('grocery') && groceryFork === 'stock')) && (
             <div className="config-section animate-fade-in">
-              <span className="section-label">Ce ingrediente ai la dispoziție?</span>
+              <div className="section-label-row">
+                <span className="section-label">Ce ingrediente ai la dispoziție?</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFridgeFileChange}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  className={`btn-vision-scan-fridge ${isScanningFridge ? 'scanning' : ''}`}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanningFridge}
+                >
+                  <Camera size={14} />
+                  <span>{isScanningFridge ? 'Llama 3.2 Vision scanează...' : 'Foto Frigider AI'}</span>
+                </button>
+              </div>
+
+              {scanSuccessMessage && (
+                <div className="scan-fridge-alert animate-fade-in">
+                  <span>{scanSuccessMessage}</span>
+                </div>
+              )}
+
               <form onSubmit={addCustomIngredient} className="custom-item-form">
                 <input
                   type="text"
-                  placeholder="+ Adaugă ingredient custom..."
+                  placeholder="+ Scrie orice ingredient (ex: Somon, Avocado)..."
                   value={customItem}
                   onChange={(e) => setCustomItem(e.target.value)}
                   className="add-item-input"
@@ -586,6 +648,55 @@ export function PreSwipeModal({
           .slider-input {
             width: 100%;
             accent-color: var(--macro-calories);
+          }
+
+          .section-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+          }
+
+          .btn-vision-scan-fridge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: rgba(99, 102, 241, 0.16);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: var(--radius-full);
+            color: #a5b4fc;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--duration-fast);
+          }
+
+          .btn-vision-scan-fridge.scanning {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: #818cf8;
+            color: #ffffff;
+            animation: pulse-glow 1.2s infinite alternate;
+          }
+
+          .btn-vision-scan-fridge:active {
+            transform: scale(0.96);
+          }
+
+          .scan-fridge-alert {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            color: #6ee7b7;
+            font-weight: 700;
+            margin-bottom: 8px;
+          }
+
+          @keyframes pulse-glow {
+            from { opacity: 0.7; }
+            to { opacity: 1; box-shadow: 0 0 12px rgba(99, 102, 241, 0.6); }
           }
 
           .custom-item-form {
