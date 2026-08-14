@@ -103,6 +103,15 @@ export function generateProceduralCookingDAG(
  * Lints and repairs the whole recipe proposal against culinary invariants
  */
 export function lintAndRepairRecipe<T extends MealCardProposal>(recipe: T): T {
+  // 0. Sanitize and grammaticalize title
+  let title = (recipe.title || 'Preparat Gourmet')
+    .replace(/^ouă\s+rumenit\b/i, 'Omletă rumenită')
+    .replace(/^ouă\s+la\s+tigaie\b/i, 'Omletă pufoasă la tigaie')
+    .replace(/^ouă\s+ochiuri\s+rumenit\b/i, 'Ouă ochiuri rumenite')
+    .replace(/^conserve\s+de\s+ton\s+rumenit\b/i, 'Salată gourmet de ton')
+    .replace(/^piept\s+de\s+pui\s+rumenit\b/i, 'Piept de pui rumenit')
+    .replace(/^mușchi\s+de\s+vită\s+rumenit\b/i, 'Mușchi de vită rumenit');
+
   // 1. Sanitize matchReason
   let matchReason = recipe.matchReason || '';
   const isSlopReason = SLOP_PATTERNS.some((p) => p.test(matchReason)) || matchReason.toLowerCase().startsWith('explică');
@@ -128,6 +137,7 @@ export function lintAndRepairRecipe<T extends MealCardProposal>(recipe: T): T {
 
   return {
     ...recipe,
+    title,
     matchReason,
     instructions,
   };

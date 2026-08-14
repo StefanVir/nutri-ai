@@ -51,6 +51,53 @@ export function classifyIngredient(name: string): ClassifiedIngredient {
   return { name, role: 'AROMATICS_CONDIMENTS' };
 }
 
+export function formatGourmetDishTitle(
+  heroProtein: string,
+  veggie: string = 'Spanac',
+  fatOrDairy: string = 'Telemea',
+  starch: string = 'Cartofi',
+  appliance: string = 'Tigaie'
+): string {
+  const norm = heroProtein.toLowerCase().trim();
+
+  // Eggs
+  if (norm.includes('ou')) {
+    if (fatOrDairy.toLowerCase().includes('telemea') || fatOrDairy.toLowerCase().includes('brânz') || fatOrDairy.toLowerCase().includes('branz')) {
+      return `Omletă pufoasă cu ${fatOrDairy} și ${veggie}`;
+    }
+    if (fatOrDairy.toLowerCase().includes('avocado')) {
+      return `Omletă fină cu ${veggie} și cuburi de ${fatOrDairy}`;
+    }
+    return `Omletă gourmet cu ${veggie} și ${fatOrDairy}`;
+  }
+
+  // Tuna / Fish
+  if (norm.includes('ton') || norm.includes('conserv')) {
+    return `Salată mediteraneană de ton cu ${fatOrDairy} și ${veggie}`;
+  }
+  if (norm.includes('somon') || norm.includes('păstrăv') || norm.includes('pastrav') || norm.includes('dorad') || norm.includes('cod')) {
+    return `File de ${heroProtein.toLowerCase()} la ${appliance} cu ${veggie}`;
+  }
+
+  // Beef / Steak
+  if (norm.includes('vit') || norm.includes('mușchi') || norm.includes('muschi') || norm.includes('antricot')) {
+    return `Mușchi de vită suculent la ${appliance} cu ${veggie} sote`;
+  }
+
+  // Chicken / Turkey
+  if (norm.includes('pui') || norm.includes('curcan') || norm.includes('piept')) {
+    return `Piept de pui rumenit la ${appliance} cu ${veggie} și ${starch}`;
+  }
+
+  // Pork
+  if (norm.includes('porc') || norm.includes('cotlet')) {
+    return `Cotlet de porc la ${appliance} cu garnitură de ${starch}`;
+  }
+
+  // Fallback
+  return `Preparat gourmet din ${heroProtein} cu ${veggie} și ${fatOrDairy}`;
+}
+
 export interface CulinaryArchetypePlan {
   heroProtein: string;
   complementaryIngredients: string[];
@@ -83,29 +130,30 @@ export function buildCulinaryArchetypes(
     const p2 = heroProteins[1];
     const p3 = heroProteins[2] || heroProteins[0];
 
+    const v1 = veggies[0] || 'Spanac';
+    const v2 = veggies[1] || veggies[0] || 'Verdețuri';
+    const f1 = fatsDairy[0] || 'Ulei de măsline';
+    const f2 = fatsDairy[1] || fatsDairy[0] || 'Telemea';
+
     return [
       {
         heroProtein: p1,
-        complementaryIngredients: [p1, veggies[0] || 'Spanac', starches[0] || 'Cartofi', defaultFat].filter(Boolean),
-        suggestedDishTitle: `${p1} la ${appliances[0] || 'Tigaie'} cu ${veggies[0] || 'Legume Sote'}`,
+        complementaryIngredients: [p1, v1, starches[0] || 'Cartofi', f1].filter(Boolean),
+        suggestedDishTitle: formatGourmetDishTitle(p1, v1, f1, starches[0] || 'Cartofi', appliances[0] || 'Tigaie'),
         suggestedAppliance: appliances[0] || 'Aragaz / Tigaie',
         preparationStyle: 'saute_sear',
       },
       {
         heroProtein: p2,
-        complementaryIngredients: [p2, fatsDairy[0] || 'Avocado', veggies[1] || veggies[0] || 'Verdețuri', starches[1] || starches[0]].filter(Boolean),
-        suggestedDishTitle: p2.toLowerCase().includes('ton')
-          ? `Salată gourmet cu ${p2} și ${fatsDairy[0] || 'Avocado'}`
-          : `${p2} rumenit cu ${fatsDairy[0] || 'Garnitură fină'}`,
-        suggestedAppliance: appliances[1] || appliances[0] || 'Tăiere / Bol',
+        complementaryIngredients: [p2, f2, v2, starches[1] || starches[0]].filter(Boolean),
+        suggestedDishTitle: formatGourmetDishTitle(p2, v2, f2, starches[1] || 'Orez', appliances[1] || appliances[0] || 'Tigaie'),
+        suggestedAppliance: appliances[1] || appliances[0] || 'Aragaz / Tigaie',
         preparationStyle: p2.toLowerCase().includes('ton') ? 'fresh_bowl' : 'saute_sear',
       },
       {
         heroProtein: p3,
-        complementaryIngredients: [p3, veggies[0] || 'Legume', fatsDairy[0] || 'Brânză'].filter(Boolean),
-        suggestedDishTitle: p3.toLowerCase().includes('ou')
-          ? `Omletă pufoasă cu ${veggies[0] || 'Spanac'} și ${fatsDairy[0] || 'Avocado'}`
-          : `Nutri-Bowl echilibrat cu ${p3} și ${defaultVeggie}`,
+        complementaryIngredients: [p3, v1, f2].filter(Boolean),
+        suggestedDishTitle: formatGourmetDishTitle(p3, v1, f2, starches[0] || 'Lipie', appliances[0] || 'Tigaie'),
         suggestedAppliance: appliances[0] || 'Aragaz / Tigaie',
         preparationStyle: p3.toLowerCase().includes('ou') ? 'skillet_omelette' : 'roasted_bake',
       },
@@ -118,22 +166,22 @@ export function buildCulinaryArchetypes(
     {
       heroProtein: hero,
       complementaryIngredients: [hero, defaultVeggie, defaultStarch, defaultFat].filter(Boolean),
-      suggestedDishTitle: `${hero} la ${appliances[0] || 'Tigaie'} cu ${defaultVeggie} sote`,
+      suggestedDishTitle: formatGourmetDishTitle(hero, defaultVeggie, defaultFat, defaultStarch, appliances[0] || 'Tigaie'),
       suggestedAppliance: appliances[0] || 'Aragaz / Tigaie',
       preparationStyle: 'saute_sear',
     },
     {
       heroProtein: hero,
       complementaryIngredients: [hero, defaultVeggie, fatsDairy[0] || 'Avocado'].filter(Boolean),
-      suggestedDishTitle: `Bowl proteic cu ${hero}, ${defaultVeggie} și ${fatsDairy[0] || 'Avocado'}`,
+      suggestedDishTitle: `Bowl proteic cu ${hero.toLowerCase()}, ${defaultVeggie.toLowerCase()} și ${fatsDairy[0] || 'avocado'}`,
       suggestedAppliance: appliances[1] || appliances[0] || 'Airfryer',
       preparationStyle: 'fresh_bowl',
     },
     {
       heroProtein: hero,
       complementaryIngredients: [hero, starches[0] || 'Lipie', defaultVeggie].filter(Boolean),
-      suggestedDishTitle: `Wrap / Rumenit crocant cu ${hero} și verdețuri`,
-      suggestedAppliance: appliances[0] || 'Cuptor',
+      suggestedDishTitle: `Wrap rumenit crocant cu ${hero.toLowerCase()} și legume`,
+      suggestedAppliance: appliances[0] || 'Aragaz / Tigaie',
       preparationStyle: 'crisp_wrap',
     },
   ];
