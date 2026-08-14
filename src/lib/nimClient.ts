@@ -210,36 +210,38 @@ export async function analyzeFoodImageWithNIM(
       carbs: 45,
       fat: 15,
       detectedItems: [{ name: 'Aliment detectat vizual', estimatedGrams: 250, calories: 450 }],
-      confidenceNotes: 'Pentru recunoaștere foto avansată prin Llama 3.2 Vision, adaugă cheia NVIDIA NIM.',
+      confidenceNotes: 'Pentru recunoaștere foto avansată prin Llama 3.2 90B Vision, adaugă cheia NVIDIA NIM.',
     };
   }
 
-  const systemPrompt = `You are a world-class AI nutritionist and computer vision food recognition expert.
-Analyze the meal photograph provided by the user with utmost accuracy.
-Identify all visible food items on the plate, estimate their weight in grams based on visual volume, and calculate total calories, protein, carbs, and fat.
+  const systemPrompt = `You are an expert culinary and sports nutrition computer vision AI.
+Look carefully at the actual food, ingredients, sauces, and drinks in the provided image.
+Do NOT repeat any placeholder or template text. Inspect the specific items on the plate (e.g. fish type, meat, potatoes/fries, sauce bowls, drinks).
 
-Respond STRICTLY in valid JSON adhering to this exact schema:
+Analyze each component accurately and output strictly valid JSON in Romanian adhering to this structure:
 {
-  "title": "Numele Preparatului Detectat în Română (ex: Somon la Grătar cu Sparanghel și Cartofi Dulci)",
-  "calories": 520,
-  "protein": 38,
-  "carbs": 42,
-  "fat": 18,
+  "title": "<Short appetizing name of the meal in Romanian based on what you actually see>",
+  "calories": <total integer calories>,
+  "protein": <total grams of protein>,
+  "carbs": <total grams of carbohydrates>,
+  "fat": <total grams of fat>,
   "detectedItems": [
-    { "name": "File de somon la grătar", "estimatedGrams": 160, "calories": 310 },
-    { "name": "Cartofi dulci la cuptor", "estimatedGrams": 120, "calories": 140 },
-    { "name": "Sparanghel sotat", "estimatedGrams": 80, "calories": 70 }
+    {
+      "name": "<name of specific food item detected>",
+      "estimatedGrams": <estimated weight in grams>,
+      "calories": <calories for this item>
+    }
   ],
-  "confidenceNotes": "Explicație clară în Română despre cum ai estimat porțiile și ingredientele vizibile pe farfurie."
+  "confidenceNotes": "<A genuine Romanian explanation of the detected food items on the plate, portion size estimates, and macro breakdown>"
 }`;
 
   const promptText = userHint && userHint.trim().length > 0
-    ? `Analizează această farfurie. Notiță utilizator: "${userHint.trim()}". Identifică ingredientele, gramajele și macro-nutrienții.`
-    : 'Analizează această farfurie cu mâncare. Identifică fiecare componentă, estimează cantitățile și calculează caloriile și macronutrienții (P/C/F).';
+    ? `Analizează cu atenție mâncarea din imagine. Notă utilizator: "${userHint.trim()}". Identifică exact ingredientele vizibile pe farfurie (inclusiv sosuri, garnituri, carne/pește, băuturi) și calculează valorile nutriționale.`
+    : 'Analizează cu atenție mâncarea din imagine. Identifică exact fiecare element vizibil pe farfurie și pe masă (carne/pește, cartofi/garnituri, boluri cu sos, băuturi) și calculează gramajele și macronutrienții reali.';
 
   try {
     const completion = await client.chat.completions.create({
-      model: 'meta/llama-3.2-11b-vision-instruct',
+      model: 'meta/llama-3.2-90b-vision-instruct',
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -251,11 +253,11 @@ Respond STRICTLY in valid JSON adhering to this exact schema:
         },
       ],
       temperature: 0.2,
-      max_tokens: 1000,
+      max_tokens: 1200,
     });
 
     const content = completion.choices[0]?.message?.content;
-    if (!content) throw new Error('Empty response from Vision model');
+    if (!content) throw new Error('Empty response from 90B Vision model');
 
     const rawJson = parseJsonResponse(content);
     return {
@@ -268,7 +270,7 @@ Respond STRICTLY in valid JSON adhering to this exact schema:
       confidenceNotes: rawJson.confidenceNotes || 'Analiză foto efectuată cu succes.',
     };
   } catch (err: any) {
-    console.error('Vision analysis error on NIM:', err);
+    console.error('Vision analysis error on NIM 90B:', err);
     return {
       title: 'Mâncare Scanată Foto',
       calories: 450,
@@ -280,4 +282,5 @@ Respond STRICTLY in valid JSON adhering to this exact schema:
     };
   }
 }
+
 
