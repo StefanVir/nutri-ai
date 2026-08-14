@@ -5,6 +5,8 @@ import { filterOrGenerateRecipes } from './mockRecipes';
 import { resolveMealImageUrl } from './foodImages';
 import { calculateMealTargetSlot } from './metabolic';
 import { recalculateAndGroundMeal } from './nutritionDb';
+import { buildCulinaryArchetypes } from './culinaryEngine';
+import { lintAndRepairRecipe } from './culinaryLinter';
 
 // NVIDIA NIM OpenAI-Compatible Endpoint
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
@@ -148,11 +150,17 @@ The response MUST be ONLY valid JSON matching this schema:
   ]
 }`;
 
+  // Build 3 distinct culinary archetypes to enforce protein isolation
+  const archetypes = buildCulinaryArchetypes(context.fridgeIngredients || [], context.appliances || []);
+  const archetypeGuide = archetypes.map((a, i) => `Rețeta ${i + 1}: ${a.suggestedDishTitle} (Proteină erou: ${a.heroProtein}, Ingrediente cheie: ${a.complementaryIngredients.join(', ')})`).join('\n');
+
   const userPrompt = `Ingrediente disponibile în bucătărie: ${ingredientsListStr}.
 Echipamente disponibile: ${appliancesStr}.
 Mod: ${context.mode}.
 Țintă nutrițională pentru această masă (${context.mealCategory}): ~${mealSlot.targetCalories} kcal, ~${mealSlot.targetProtein}g Proteine.
-Creează 3 rețete gourmet variate, logice și delicioase.`;
+
+Generează 3 rețete gourmet diferite, respectând această separare a proteinelor erou:
+${archetypeGuide}`;
 
   // Try fast 8B model first, fallback to high capacity model
   const modelsToTry = [FAST_DECK_MODEL, HIGH_CAPACITY_MODEL];
@@ -177,24 +185,10 @@ Creează 3 rețete gourmet variate, logice și delicioase.`;
 
       if (parsed.success && parsed.data.recipes.length > 0) {
         return parsed.data.recipes.map((rec) => {
-          // Clean any leftover placeholder or slop text in matchReason
-          const cleanMatchReason = rec.matchReason && !rec.matchReason.toLowerCase().startsWith('explică')
-            ? rec.matchReason
-            : 'Optimizat pentru aport proteic ridicat și sațietate metabolică.';
-
-          // Filter out generic slop lines from instructions
-          const cleanInstructions = rec.instructions
-            .filter((step) => !step.toLowerCase().includes('sărbătorește') && !step.toLowerCase().includes('bucură-te'))
-            .map((step) => step.trim());
-
-          const cleanedRecipe = {
-            ...rec,
-            matchReason: cleanMatchReason,
-            instructions: cleanInstructions.length > 0 ? cleanInstructions : rec.instructions,
-          };
-
-          // Tier 3: Deterministic Bottom-Up Ingredient Aggregator
-          const grounded = recalculateAndGroundMeal(cleanedRecipe, mealSlot.targetCalories);
+          // Tier 3: Quality Culinary Linter (Verb normalization, anti-slop, 4-phase DAG)
+          const linted = lintAndRepairRecipe(rec as MealCardProposal);
+          // Tier 4: Deterministic Bottom-Up USDA Nutrient Grounding
+          const grounded = recalculateAndGroundMeal(linted, mealSlot.targetCalories);
           return {
             ...grounded,
             imageUrl: grounded.imageUrl || resolveMealImageUrl(grounded.title, grounded.ingredients, grounded.tags),
