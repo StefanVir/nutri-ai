@@ -35,6 +35,7 @@ export default function Home() {
 
   // Modals & Bottom Sheets
   const [isPreSwipeModalOpen, setIsPreSwipeModalOpen] = useState(false);
+  const [isGeneratingDeck, setIsGeneratingDeck] = useState(false);
   const [preSwipeCategory, setPreSwipeCategory] = useState<MealCategory>('dinner');
   const [detailRecipe, setDetailRecipe] = useState<MealCardProposal | null>(null);
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
@@ -63,7 +64,11 @@ export default function Home() {
 
   const saveProfile = (newProfile: UserProfile) => {
     setProfile(newProfile);
-    localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(newProfile));
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(newProfile));
+    } catch (e) {
+      console.warn('Eroare la salvarea profilului:', e);
+    }
   };
 
   const saveMeals = (meals: LoggedMeal[]) => {
@@ -94,8 +99,7 @@ export default function Home() {
 
   // Handlers for Swipe & Matchup
   const handleLaunchSwipe = async (context: PreSwipeContext) => {
-    setIsPreSwipeModalOpen(false);
-    setCurrentTab('swipe');
+    setIsGeneratingDeck(true);
     setIsShowdownActive(false);
     setShortlistedMeals([]);
 
@@ -110,15 +114,21 @@ export default function Home() {
         const data = await res.json();
         if (data.recipes && data.recipes.length > 0) {
           setDeckRecipes(data.recipes);
+          setIsGeneratingDeck(false);
+          setIsPreSwipeModalOpen(false);
+          setCurrentTab('swipe');
           return;
         }
       }
     } catch (e) {
-      console.warn('Apel API esuat, folosesc motorul local:', e);
+      console.warn('Apel API esuat, folosesc motorul local dinamic:', e);
     }
 
     const localRecipes = filterOrGenerateRecipes(context);
     setDeckRecipes(localRecipes);
+    setIsGeneratingDeck(false);
+    setIsPreSwipeModalOpen(false);
+    setCurrentTab('swipe');
   };
 
   const handleSwipeRight = (recipe: MealCardProposal) => {
@@ -385,7 +395,10 @@ export default function Home() {
           remainingProtein={remainingProtein}
           remainingCarbs={remainingCarbs}
           remainingFat={remainingFat}
-          onClose={() => setIsPreSwipeModalOpen(false)}
+          isGenerating={isGeneratingDeck}
+          onClose={() => {
+            if (!isGeneratingDeck) setIsPreSwipeModalOpen(false);
+          }}
           onLaunch={handleLaunchSwipe}
         />
 

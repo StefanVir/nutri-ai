@@ -1,215 +1,179 @@
 import { MealCardProposal, PreSwipeContext } from '@/types/nutrition';
 import { resolveMealImageUrl } from './foodImages';
 
-export const INITIAL_MOCK_RECIPES: MealCardProposal[] = [
-  {
-    id: 'rec-quesadilla-airfryer-pui',
-    title: 'Quesadilla Crispy la Airfryer cu Pui, Spanac & Telemea',
-    mode: 'fridge',
-    imageUrl: 'https://images.unsplash.com/photo-1618040996337-56904b7850b9?auto=format&fit=crop&w=800&q=80',
-    calories: 580,
-    protein: 48,
-    carbs: 45,
-    fat: 16,
-    prepTimeMinutes: 5,
-    cookTimeMinutes: 8,
-    difficulty: 'Ușor',
-    servings: 1,
-    appliancesUsed: ['Airfryer / Friteuză cu aer cald'],
-    estimatedCostRon: 15,
-    matchReason: 'Folosește puiul și telemeaua din frigider și oferă un aport proteic ridicat fără ulei în exces.',
-    tags: ['High Protein', 'Airfryer', 'Gata în 15 min'],
-    ingredients: [
-      { name: 'Piept de pui fâșii (gătit sau crud)', amount: '160g', isPantryStock: true },
-      { name: 'Lipie integrală mare', amount: '1 buc (60g)', isPantryStock: true },
-      { name: 'Telemea mărunțită', amount: '35g', isPantryStock: true },
-      { name: 'Frunze de spanac proaspăt', amount: '30g', isPantryStock: true },
-      { name: 'Boia dulce, oregano, sare, piper', amount: 'după gust', isPantryStock: true },
-    ],
-    instructions: [
-      'Asezonează fâșiile de piept de pui cu boia, oregano, sare și piper.',
-      'Așază pe jumătate de lipie frunzele de spanac, puiul și presară telemeaua.',
-      'Împăturește lipia în două și fixeaz-o ușor cu o scobitoare sau prin presare.',
-      'Introdu în coșul Airfryer-ului la 190°C timp de 7-8 minute (întoarce la minutul 4) până când devine aurie și crocantă.',
-      'Taie în 3 triunghiuri și servește caldă.',
-    ],
-  },
-  {
-    id: 'rec-tigaie-pui-spanac',
-    title: 'Tigaie Mediteraneană de Pui cu Spanac & Orez Basmati',
-    mode: 'fridge',
-    imageUrl: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=800&q=80',
-    calories: 620,
-    protein: 46,
-    carbs: 58,
-    fat: 18,
-    prepTimeMinutes: 10,
-    cookTimeMinutes: 15,
-    difficulty: 'Ușor',
-    servings: 1,
-    appliancesUsed: ['Aragaz / Tigaie'],
-    estimatedCostRon: 18,
-    matchReason: 'Echilibru optim de carbohidrați complecși și proteine slabe pentru refacere metabolică.',
-    tags: ['Post Workout', 'Echilibrat', 'Tigaie Rapidă'],
-    ingredients: [
-      { name: 'Piept de pui cuburi', amount: '180g', isPantryStock: true },
-      { name: 'Orez basmati fiert', amount: '160g (fiert)', isPantryStock: true },
-      { name: 'Spanac frunze', amount: '70g', isPantryStock: true },
-      { name: 'Ulei de măsline extravirgin', amount: '1 linguriță (5ml)', isPantryStock: true },
-      { name: 'Roșii cherry', amount: '6 buc', isPantryStock: true },
-      { name: 'Usturoi zdrobit', amount: '2 căței', isPantryStock: true },
-    ],
-    instructions: [
-      'Încinge o tigaie antiaderentă cu uleiul de măsline și sotează usturoiul timp de 30 de secunde.',
-      'Adaugă cuburile de pui și rumenește-le la foc mediu-iute timp de 7-8 minute până devin aurii.',
-      'Adaugă roșiile cherry și frunzele de spanac; amestecă 2 minute până când spanacul se restrânge.',
-      'Toarnă orezul basmati fiert direct în tigaie, amestecă la foc mic 1 minut pentru a absorbi aromele și asezonează cu piper proaspăt măcinat.',
-    ],
-  },
-  {
-    id: 'rec-omleta-airfryer-souffle',
-    title: 'Omletă Pufoasă la Airfryer cu Telemea & Spanac',
-    mode: 'fridge',
-    imageUrl: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80',
-    calories: 440,
-    protein: 34,
-    carbs: 8,
-    fat: 28,
-    prepTimeMinutes: 5,
-    cookTimeMinutes: 12,
-    difficulty: 'Ușor',
-    servings: 1,
-    appliancesUsed: ['Airfryer / Friteuză cu aer cald'],
-    estimatedCostRon: 11,
-    matchReason: 'Mic dejun sau cină keto-friendly, ultra-rapidă, fără ulei adăugat.',
-    tags: ['Keto / Low Carb', 'Mic Dejun Rapid', 'Airfryer Soufflé'],
-    ingredients: [
-      { name: 'Ouă proaspete', amount: '3 buc mari', isPantryStock: true },
-      { name: 'Telemea rasă', amount: '40g', isPantryStock: true },
-      { name: 'Frunze de spanac tocate', amount: '30g', isPantryStock: true },
-      { name: 'Iaurt grecesc 2%', amount: '1 lingură (25g)', isPantryStock: true },
-      { name: 'Sare, piper, mărar uscat', amount: 'după gust', isPantryStock: true },
-    ],
-    instructions: [
-      'Bate bine ouăle cu iaurtul grecesc, sarea și piperul până când compoziția devine aerată.',
-      'Toarnă amestecul într-o formă mică de silicon/ceramică termorezistentă compatibilă cu Airfryer-ul.',
-      'Presară deasupra spanacul tocat și telemeaua rasă.',
-      'Coace la 165°C timp de 12 minute până când omleta crește frumos și se rumenește la suprafață.',
-    ],
-  },
-  {
-    id: 'rec-paste-ton-rosii',
-    title: 'Penne Proteice cu Ton, Roșii & Ulei de Măsline',
-    mode: 'grocery_stock',
-    imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281691?auto=format&fit=crop&w=800&q=80',
-    calories: 590,
-    protein: 42,
-    carbs: 72,
-    fat: 14,
-    prepTimeMinutes: 5,
-    cookTimeMinutes: 10,
-    difficulty: 'Ușor',
-    servings: 1,
-    appliancesUsed: ['Aragaz / Tigaie'],
-    estimatedCostRon: 14,
-    matchReason: 'Folosește pastele și tonul din stoc și adaugă suc de roșii cu cost minim.',
-    tags: ['Pantry Hero', 'Buget Redus', 'High Carb Load'],
-    ingredients: [
-      { name: 'Paste integrale (Penne)', amount: '80g (cântărit uscat)', isPantryStock: true },
-      { name: 'Conservă de ton bucăți în suc propriu', amount: '1 conservă (120g scurs)', isPantryStock: true },
-      { name: 'Sos de roșii pasate / Passata', amount: '120ml', toBuy: true, estimatedPriceRon: 3.5 },
-      { name: 'Ulei de măsline', amount: '1 linguriță (5ml)', isPantryStock: true },
-      { name: 'Oregano & busuioc', amount: '1/2 linguriță', isPantryStock: true },
-    ],
-    instructions: [
-      'Fierbe pastele în apă cu sare timp de 8-9 minute până sunt al dente.',
-      'Într-o tigaie, încălzește passata de roșii cu oregano și busuioc timp de 2-3 minute.',
-      'Adaugă tonul scurs și pastele fierte direct în tigaie, amestecând 1 minut.',
-      'Toarnă la final lingurița de ulei de măsline crud.',
-    ],
-  },
-  {
-    id: 'rec-airfryer-pui-orez-legume-empty',
-    title: 'Airfryer Chicken Rice Bowl (Buget Fix Sub 30 Lei)',
-    mode: 'grocery_empty',
-    imageUrl: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=800&q=80',
-    calories: 610,
-    protein: 52,
-    carbs: 64,
-    fat: 12,
-    prepTimeMinutes: 8,
-    cookTimeMinutes: 14,
-    difficulty: 'Ușor',
-    servings: 1,
-    appliancesUsed: ['Airfryer / Friteuză cu aer cald'],
-    estimatedCostRon: 24.5,
-    matchReason: 'Rețetă completă de la zero gândită să se încadreze sub plafonul tău de 30 lei.',
-    tags: ['Frigider Gol', 'Sub 30 Lei', 'Clean Eating'],
-    ingredients: [
-      { name: 'Piept de pui proaspăt', amount: '200g', toBuy: true, estimatedPriceRon: 12.0 },
-      { name: 'Pungă mică orez prefiert (100g)', amount: '1 plic', toBuy: true, estimatedPriceRon: 3.5 },
-      { name: 'Mix legume congelate (broccoli/morcov)', amount: '200g', toBuy: true, estimatedPriceRon: 6.0 },
-      { name: 'Sos de soia light', amount: '1 lingură', toBuy: true, estimatedPriceRon: 2.5 },
-    ],
-    instructions: [
-      'Gătește pieptul de pui la Airfryer la 190°C timp de 12-14 minute sau la tigaie.',
-      'Fierbe orezul conform plicului (10-12 minute).',
-      'Trage legumele congelate la tigaie timp de 5 minute cu o lingură de sos de soia.',
-      'Asamblează totul într-un bol generos.',
-    ],
-  },
-  {
-    id: 'rec-restaurant-pui-orez-salata',
-    title: 'Ghid Restaurant: Pui la Grătar cu Orez & Salată Mixtă',
-    mode: 'restaurant',
-    imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
-    calories: 560,
-    protein: 48,
-    carbs: 52,
-    fat: 14,
-    prepTimeMinutes: 0,
-    cookTimeMinutes: 0,
-    difficulty: 'Ușor',
-    servings: 1,
-    appliancesUsed: [],
-    estimatedCostRon: 38,
-    matchReason: 'Opțiune clasică disponibilă în aproape orice restaurant/bistrou, perfect aliniată cu deficitul tău.',
-    tags: ['Restaurant Guide', 'Comandă Sigură', 'Zero Gătit'],
-    ingredients: [
-      { name: 'Piept de pui la grătar (fără sosuri grele)', amount: '180g' },
-      { name: 'Orez simplu / orez sălbatic', amount: '150g' },
-      { name: 'Salată verde / varză cu lămâie', amount: '150g' },
-      { name: 'Sfat: Cere dressingul separat!', amount: '1 porție' },
-    ],
-    instructions: [
-      'Cere ospătarului carnea preparată simplu pe grătar, fără unt sau ulei adăugat la final.',
-      'Alege ca garnitură orezul fiert simplu sau cartofi copți (evită prăjelile).',
-      'Asezonează salata doar cu suc proaspăt de lămâie și sare.',
-    ],
-  },
-];
-
 export function filterOrGenerateRecipes(context: PreSwipeContext): MealCardProposal[] {
-  const filtered = INITIAL_MOCK_RECIPES.filter((recipe) => {
-    if (context.mode === 'fridge' && recipe.mode !== 'fridge') return false;
-    if (context.mode === 'grocery_empty' && recipe.mode !== 'grocery_empty') return false;
-    if (context.mode === 'grocery_stock' && recipe.mode !== 'grocery_stock' && recipe.mode !== 'fridge') return false;
-    if (context.mode === 'restaurant' && recipe.mode !== 'restaurant') return false;
+  const userItems = (context.fridgeIngredients || []).filter((i) => i.trim().length > 0);
+  const appliances = context.appliances && context.appliances.length > 0 ? context.appliances : ['Tigaie / Aragaz'];
+  const primaryApp = appliances[0] || 'Tigaie';
+  const secondaryApp = appliances[1] || appliances[0] || 'Airfryer';
 
-    if (context.appliances.length > 0 && recipe.appliancesUsed.length > 0) {
-      const hasMatchingAppliance = recipe.appliancesUsed.some((app) =>
-        context.appliances.some((ca) => app.toLowerCase().includes(ca.toLowerCase()))
-      );
-      if (!hasMatchingAppliance) return false;
-    }
+  const cal = context.remainingCalories && context.remainingCalories > 200 ? context.remainingCalories : 550;
+  const prot = context.remainingProtein && context.remainingProtein > 10 ? context.remainingProtein : 42;
+  const carbs = context.remainingCarbs && context.remainingCarbs > 10 ? context.remainingCarbs : 50;
+  const fat = context.remainingFat && context.remainingFat > 5 ? context.remainingFat : 16;
 
-    return true;
-  });
+  // If user provided specific ingredients, build custom personalized meals around them!
+  if (userItems.length > 0) {
+    const main1 = userItems[0];
+    const main2 = userItems[1] || 'Legume proaspete';
+    const main3 = userItems[2] || (userItems.length > 1 ? userItems[0] : 'Condimente naturale');
 
-  const list = filtered.length >= 2 ? filtered : INITIAL_MOCK_RECIPES;
+    const dynamicCards: MealCardProposal[] = [
+      {
+        id: `dyn-recipe-1-${Date.now()}`,
+        title: `${main1} Rumenit la ${primaryApp} cu ${main2}`,
+        mode: context.mode,
+        calories: cal,
+        protein: prot,
+        carbs: carbs,
+        fat: fat,
+        prepTimeMinutes: 8,
+        cookTimeMinutes: 14,
+        difficulty: 'Ușor',
+        servings: context.servings || 1,
+        appliancesUsed: [primaryApp],
+        estimatedCostRon: context.maxBudgetRon ? Math.min(context.maxBudgetRon, 22) : 16,
+        matchReason: `Creat special din frigiderul tău pe baza ${userItems.slice(0, 3).join(', ')}, calibrat la fix pe deficitul caloric.`,
+        tags: ['Smart AI', 'High Protein', primaryApp],
+        ingredients: userItems.map((item, idx) => ({
+          name: item,
+          amount: idx === 0 ? '180g' : idx === 1 ? '80g' : '50g',
+          isPantryStock: true,
+          toBuy: false,
+          estimatedPriceRon: 0,
+        })),
+        instructions: [
+          `Pregătește și porționează ${main1} și ${main2}.`,
+          `Setează ${primaryApp} la temperatură medie și gătește ingredientele timp de 10-12 minute.`,
+          `Asezonează cu sare, piper și ierburi după gust.`,
+          `Servește cald direct în farfurie pentru refacere metabolică optimă.`,
+        ],
+      },
+      {
+        id: `dyn-recipe-2-${Date.now()}`,
+        title: `Nutri-Bowl Echilibrat cu ${main1} & ${main3}`,
+        mode: context.mode,
+        calories: Math.max(300, cal - 40),
+        protein: Math.max(25, prot - 4),
+        carbs: Math.max(20, carbs + 8),
+        fat: Math.max(10, fat - 2),
+        prepTimeMinutes: 10,
+        cookTimeMinutes: 12,
+        difficulty: 'Ușor',
+        servings: context.servings || 1,
+        appliancesUsed: [secondaryApp],
+        estimatedCostRon: context.maxBudgetRon ? Math.min(context.maxBudgetRon, 20) : 14,
+        matchReason: `Valorifică ${main1} și ${main3} cu o densitate nutritivă ridicată și timp minim de gătire.`,
+        tags: ['Nutri Bowl', 'Clean Eating', secondaryApp],
+        ingredients: userItems.map((item, idx) => ({
+          name: item,
+          amount: idx === 0 ? '160g' : '60g',
+          isPantryStock: true,
+          toBuy: false,
+          estimatedPriceRon: 0,
+        })),
+        instructions: [
+          `Gătește ${main1} la ${secondaryApp} până capătă o textură fragedă și rumenă.`,
+          `Taie ${main3} și asamblează într-un bol generos.`,
+          `Adaugă condimentele preferate și combină ingredientele pentru un gust echilibrat.`,
+        ],
+      },
+      {
+        id: `dyn-recipe-3-${Date.now()}`,
+        title: `Tigaie Mediteraneană Rapidă cu ${main2} & ${main1}`,
+        mode: context.mode,
+        calories: Math.max(320, cal + 30),
+        protein: Math.max(28, prot + 2),
+        carbs: Math.max(20, carbs - 6),
+        fat: Math.max(10, fat + 2),
+        prepTimeMinutes: 6,
+        cookTimeMinutes: 10,
+        difficulty: 'Ușor',
+        servings: context.servings || 1,
+        appliancesUsed: ['Aragaz / Tigaie'],
+        estimatedCostRon: context.maxBudgetRon ? Math.min(context.maxBudgetRon, 18) : 12,
+        matchReason: `Masă ultra-rapidă gata în sub 15 minute, concentrată pe absorbția rapidă a proteinelor.`,
+        tags: ['Gata în 15 min', 'High Protein', 'Tigaie Rapidă'],
+        ingredients: userItems.map((item, idx) => ({
+          name: item,
+          amount: idx === 0 ? '170g' : '75g',
+          isPantryStock: true,
+          toBuy: false,
+          estimatedPriceRon: 0,
+        })),
+        instructions: [
+          `Încinge tigaia antiaderentă la foc mediu.`,
+          `Trage rapid ${main1} și ${main2} timp de 6-8 minute.`,
+          `Asezonează cu verdețuri proaspete sau uscate și servește imediat.`,
+        ],
+      },
+    ];
 
-  return list.map((rec) => ({
+    return dynamicCards.map((rec) => ({
+      ...rec,
+      imageUrl: resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
+    }));
+  }
+
+  // Fallback for empty fridge / generic mode
+  const genericCards: MealCardProposal[] = [
+    {
+      id: `gen-1-${Date.now()}`,
+      title: 'Bowl Proteic cu Orez Basmati & Legume la Tigaie',
+      mode: context.mode,
+      calories: cal,
+      protein: prot,
+      carbs: carbs,
+      fat: fat,
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 15,
+      difficulty: 'Ușor',
+      servings: context.servings || 1,
+      appliancesUsed: [primaryApp],
+      estimatedCostRon: context.maxBudgetRon || 20,
+      matchReason: 'Calibrat automat pe necesarul caloric al zilei.',
+      tags: ['High Protein', 'Echilibrat'],
+      ingredients: [
+        { name: 'Orez basmati', amount: '160g fiert', isPantryStock: true },
+        { name: 'Sursă slabă de proteine', amount: '180g', isPantryStock: true },
+        { name: 'Mix legume proaspete', amount: '120g', isPantryStock: true },
+      ],
+      instructions: [
+        'Fierbe orezul conform instrucțiunilor.',
+        `Gătește sursa de proteină și legumele la ${primaryApp}.`,
+        'Asamblează totul într-un bol și asezonează după gust.',
+      ],
+    },
+    {
+      id: `gen-2-${Date.now()}`,
+      title: 'Wrap Crocant Proteic cu Brânză & Verdețuri',
+      mode: context.mode,
+      calories: Math.max(300, cal - 50),
+      protein: prot,
+      carbs: Math.max(20, carbs - 10),
+      fat: fat,
+      prepTimeMinutes: 5,
+      cookTimeMinutes: 8,
+      difficulty: 'Ușor',
+      servings: context.servings || 1,
+      appliancesUsed: [secondaryApp],
+      estimatedCostRon: context.maxBudgetRon || 15,
+      matchReason: 'Opțiune rapidă cu carbohidrați complecși și proteine consistente.',
+      tags: ['Wrap Rapid', 'Crispy'],
+      ingredients: [
+        { name: 'Lipie integrală', amount: '1 buc (60g)', isPantryStock: true },
+        { name: 'Brânză slabă / telemea', amount: '60g', isPantryStock: true },
+        { name: 'Verdețuri proaspete', amount: '40g', isPantryStock: true },
+      ],
+      instructions: [
+        'Așază ingredientele pe lipie și împăturește strâns.',
+        `Coace la ${secondaryApp} timp de 6-8 minute până devine crocantă.`,
+      ],
+    },
+  ];
+
+  return genericCards.map((rec) => ({
     ...rec,
-    imageUrl: rec.imageUrl || resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
+    imageUrl: resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
   }));
 }

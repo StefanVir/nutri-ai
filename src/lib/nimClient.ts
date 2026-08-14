@@ -6,7 +6,9 @@ import { resolveMealImageUrl } from './foodImages';
 
 // NVIDIA NIM OpenAI-Compatible Endpoint
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
-const PRIMARY_MODEL = 'meta/llama-3.1-70b-instruct';
+const FAST_DECK_MODEL = 'meta/llama-3.1-8b-instruct';
+const HIGH_CAPACITY_MODEL = 'meta/llama-3.3-70b-instruct';
+const PRIMARY_MODEL = FAST_DECK_MODEL;
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.NVIDIA_NIM_API_KEY;
@@ -45,32 +47,47 @@ export async function generateNIMMealDeck(context: PreSwipeContext): Promise<Mea
     return filterOrGenerateRecipes(context);
   }
 
-  const systemPrompt = `You are an elite culinary chef and sports nutrition expert for NutriAI.
-You generate personalized meal cards tailored strictly to the user's metabolic remaining macros, fridge items, appliances, and budget.
+  const ingredientsListStr = context.fridgeIngredients && context.fridgeIngredients.length > 0
+    ? context.fridgeIngredients.join(', ')
+    : 'Ingrediente nutritive uzuale din bucătărie';
 
-Respond STRICTLY in valid JSON adhering to this schema:
+  const appliancesStr = context.appliances && context.appliances.length > 0
+    ? context.appliances.join(', ')
+    : 'Bucătărie standard (aragaz/cuptor/airfryer)';
+
+  const systemPrompt = `You are an elite sports nutrition chef for NutriAI.
+You create tailored meal proposals in Romanian based STRICTLY on the user's specific inputs:
+- Ingredients provided: [${ingredientsListStr}]
+- Appliances available: [${appliancesStr}]
+- Mode: ${context.mode}
+- Target remaining macros: ${context.remainingCalories} kcal, ${context.remainingProtein}g Protein, ${context.remainingCarbs}g Carbs, ${context.remainingFat}g Fat.
+
+CRITICAL INVARIANTS:
+1. Every generated recipe MUST prioritize and incorporate the specific ingredients provided by the user (${ingredientsListStr}). Do NOT default to unrelated chicken or generic recipes if the user specified other ingredients!
+2. Match the remaining macros closely (~${context.remainingCalories} kcal, ~${context.remainingProtein}g P).
+3. The response MUST be ONLY valid JSON matching this schema:
 {
   "recipes": [
     {
-      "id": "nim-recipe-1",
-      "title": "Numele Rețetei în Română",
+      "id": "rec-1",
+      "title": "Titlu preparat specific în Română",
       "mode": "${context.mode}",
-      "calories": 550,
-      "protein": 45,
-      "carbs": 50,
-      "fat": 15,
+      "calories": ${context.remainingCalories || 500},
+      "protein": ${context.remainingProtein || 40},
+      "carbs": ${context.remainingCarbs || 45},
+      "fat": ${context.remainingFat || 15},
       "prepTimeMinutes": 10,
       "cookTimeMinutes": 15,
       "difficulty": "Ușor",
-      "servings": ${context.servings},
-      "appliancesUsed": ["Airfryer / Friteuză cu aer cald"],
-      "estimatedCostRon": 18,
-      "matchReason": "De ce este ideală pentru profilul tău caloric și ingredientele din frigider",
-      "tags": ["High Protein", "Rapid"],
+      "servings": ${context.servings || 1},
+      "appliancesUsed": ["${context.appliances[0] || 'Aragaz / Tigaie'}"],
+      "estimatedCostRon": ${context.maxBudgetRon ? Math.min(context.maxBudgetRon, 25) : 18},
+      "matchReason": "Explică de ce preparatul valorifică ${context.fridgeIngredients.slice(0, 2).join(', ') || 'ingredientele tale'} și deficitul caloric.",
+      "tags": ["High Protein", "${context.appliances[0] || 'Rapid'}"],
       "ingredients": [
         {
-          "name": "Piept de pui",
-          "amount": "180g",
+          "name": "Nume ingredient",
+          "amount": "150g",
           "isPantryStock": true,
           "toBuy": false,
           "estimatedPriceRon": 0
@@ -78,59 +95,51 @@ Respond STRICTLY in valid JSON adhering to this schema:
       ],
       "instructions": [
         "Pasul 1...",
-        "Pasul 2..."
+        "Pasul 2...",
+        "Pasul 3..."
       ]
     }
   ]
 }`;
 
-  const userPrompt = `Context details:
-- Mode: ${context.mode} (${
-    context.mode === 'fridge'
-      ? 'Gătesc doar cu ce am în frigider'
-      : context.mode === 'grocery_empty'
-      ? `Frigider gol - Buget maxim total: ${context.maxBudgetRon || 30} RON`
-      : context.mode === 'grocery_stock'
-      ? `Am ingrediente de bază + Buget suplimentar magazin: ${context.maxBudgetRon || 15} RON`
-      : 'Ghid restaurant'
-  })
-- Categorie masă: ${context.mealCategory}
-- Porții: ${context.servings}
-- Echipamente: ${context.appliances.length > 0 ? context.appliances.join(', ') : 'Bucătărie standard'}
-- Ingrediente disponibile: ${context.fridgeIngredients.length > 0 ? context.fridgeIngredients.join(', ') : 'Niciunul'}
-- Macro-uri rămase azi: ~${context.remainingCalories} kcal, ~${context.remainingProtein}g Proteine, ~${context.remainingCarbs}g Carbohidrați, ~${context.remainingFat}g Grăsimi.
+  const userPrompt = `Generează 3 rețete variate și delicioase folosind în mod expres aceste ingrediente disponibile: ${ingredientsListStr}.
+Echipamente: ${appliancesStr}.
+Mod gătire: ${context.mode} (${context.mode === 'fridge' ? 'Folosește ce am în frigider' : context.mode === 'grocery_empty' ? `Buget total: ${context.maxBudgetRon || 30} RON` : 'Smart Grocery / Restaurant'}).
+Macro-uri țintă: ~${context.remainingCalories} kcal, ~${context.remainingProtein}g Proteine, ~${context.remainingCarbs}g Carbohidrați, ~${context.remainingFat}g Grăsimi.`;
 
-Generează 3-4 opțiuni de mese gustoase, diversificate și realiste în limba Română, respectând cu strictețe aceste constrângeri.`;
+  // Try fast 8B model first, fallback to high capacity model
+  const modelsToTry = [FAST_DECK_MODEL, HIGH_CAPACITY_MODEL];
 
-  try {
-    const completion = await client.chat.completions.create({
-      model: PRIMARY_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.4,
-      max_tokens: 2500,
-    });
+  for (const model of modelsToTry) {
+    try {
+      const completion = await client.chat.completions.create({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.35,
+        max_tokens: 1800,
+      });
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) return filterOrGenerateRecipes(context);
+      const content = completion.choices[0]?.message?.content;
+      if (!content) continue;
 
-    const rawJson = parseJsonResponse(content);
-    const parsed = MealCardDeckSchema.safeParse(rawJson);
+      const rawJson = parseJsonResponse(content);
+      const parsed = MealCardDeckSchema.safeParse(rawJson);
 
-    if (parsed.success && parsed.data.recipes.length > 0) {
-      return parsed.data.recipes.map((rec) => ({
-        ...rec,
-        imageUrl: rec.imageUrl || resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
-      })) as MealCardProposal[];
-    } else {
-      return filterOrGenerateRecipes(context);
+      if (parsed.success && parsed.data.recipes.length > 0) {
+        return parsed.data.recipes.map((rec) => ({
+          ...rec,
+          imageUrl: rec.imageUrl || resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
+        })) as MealCardProposal[];
+      }
+    } catch (err) {
+      console.warn(`Model ${model} encounter error:`, err);
     }
-  } catch (error) {
-    console.error('NVIDIA NIM API error:', error);
-    return filterOrGenerateRecipes(context);
   }
+
+  return filterOrGenerateRecipes(context);
 }
 
 export async function parseQuickAILog(textDescription: string): Promise<QuickLogOutput> {

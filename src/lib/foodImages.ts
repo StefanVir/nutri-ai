@@ -3,6 +3,14 @@
 
 const FOOD_PHOTO_MAP: { keywords: string[]; url: string }[] = [
   {
+    keywords: ['somon', 'salmon', 'pastrav', 'fish', 'peste'],
+    url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    keywords: ['avocado', 'guacamole'],
+    url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&q=80',
+  },
+  {
     keywords: ['quesadilla', 'wrap', 'lipie', 'taco', 'burrito', 'shawarma', 'fajita'],
     url: 'https://images.unsplash.com/photo-1618040996337-56904b7850b9?auto=format&fit=crop&w=800&q=80',
   },
@@ -13,10 +21,6 @@ const FOOD_PHOTO_MAP: { keywords: string[]; url: string }[] = [
   {
     keywords: ['pui', 'chicken', 'piept de pui', 'curcan', 'turkey', 'poultry'],
     url: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    keywords: ['somon', 'salmon', 'peste', 'fish', 'pastrav', 'trout'],
-    url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80',
   },
   {
     keywords: ['ton', 'tuna', 'conserva de ton'],
@@ -31,15 +35,19 @@ const FOOD_PHOTO_MAP: { keywords: string[]; url: string }[] = [
     url: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80',
   },
   {
-    keywords: ['vita', 'beef', 'steak', 'muschi', 'carne'],
+    keywords: ['vita', 'beef', 'steak', 'muschi', 'carne', 'burger'],
     url: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    keywords: ['cartof', 'cartofi', 'potato', 'sweet potato', 'cartofi dulci'],
+    url: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
   },
   {
     keywords: ['ovaz', 'oats', 'oatmeal', 'porridge', 'terci', 'granola'],
     url: 'https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=800&q=80',
   },
   {
-    keywords: ['iaurt', 'yogurt', 'parfait', 'branza', 'cottage'],
+    keywords: ['iaurt', 'yogurt', 'parfait', 'branza', 'cottage', 'telemea'],
     url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80',
   },
   {
@@ -60,11 +68,13 @@ const DEFAULT_FOOD_PHOTO =
   'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
 
 export function resolveMealImageUrl(
-  title: string,
+  title: string = '',
   ingredients: { name: string }[] = [],
   tags: string[] = []
 ): string {
-  const combinedText = `${title} ${tags.join(' ')} ${ingredients.map((i) => i.name).join(' ')}`.toLowerCase();
+  const ingrNames = Array.isArray(ingredients) ? ingredients.map((i) => i.name).join(' ') : '';
+  const tagsStr = Array.isArray(tags) ? tags.join(' ') : '';
+  const combinedText = `${title} ${tagsStr} ${ingrNames}`.toLowerCase();
 
   for (const entry of FOOD_PHOTO_MAP) {
     for (const keyword of entry.keywords) {

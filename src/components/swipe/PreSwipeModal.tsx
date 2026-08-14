@@ -15,12 +15,14 @@ interface PreSwipeModalProps {
   remainingCarbs: number;
   remainingFat: number;
   currentCategory: MealCategory;
+  isGenerating?: boolean;
 }
 
 const COMMON_PANTRY = [
-  'Ouă', 'Piept de pui', 'Orez basmati', 'Lipii integrale',
-  'Spanac', 'Telemea', 'Ovăz', 'Conserve de ton',
-  'Broccoli', 'Iaurt grecesc', 'Paste', 'Ulei de măsline',
+  'Piept de pui', 'Ouă', 'Somon proaspăt', 'Orez basmati',
+  'Lipii integrale', 'Spanac', 'Telemea', 'Avocado',
+  'Conserve de ton', 'Paste', 'Cartofi dulci', 'Iaurt grecesc',
+  'Broccoli', 'Mușchi de vită', 'Ovăz', 'Ulei de măsline',
 ];
 
 const APPLIANCES_LIST = [
@@ -40,11 +42,12 @@ export function PreSwipeModal({
   remainingCarbs,
   remainingFat,
   currentCategory,
+  isGenerating = false,
 }: PreSwipeModalProps) {
   const [mode, setMode] = useState<SwipeMode>('fridge');
   const [mealCategory, setMealCategory] = useState<MealCategory>(currentCategory);
   const [fridgeIngredients, setFridgeIngredients] = useState<string[]>([
-    'Ouă', 'Piept de pui', 'Spanac', 'Telemea', 'Lipii integrale'
+    'Piept de pui', 'Ouă', 'Spanac'
   ]);
   const [appliances, setAppliances] = useState<string[]>(['Airfryer', 'Aragaz / Tigaie']);
   const [servings, setServings] = useState<number>(1);
@@ -322,9 +325,23 @@ export function PreSwipeModal({
 
         {/* Footer CTA */}
         <div className="modal-footer">
-          <button type="button" className="btn-launch-deck" onClick={handleStartSwipe}>
-            <Sparkles size={18} />
-            <span>Generează & Deschide Swipe Deck</span>
+          <button
+            type="button"
+            className={`btn-launch-deck ${isGenerating ? 'loading' : ''}`}
+            onClick={handleStartSwipe}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <>
+                <div className="btn-spinner" />
+                <span>Chef AI generează rețetele tale...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={18} />
+                <span>Generează & Deschide Swipe Deck</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -687,11 +704,32 @@ export function PreSwipeModal({
             font-size: 0.92rem;
             font-weight: 800;
             box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
-            transition: transform var(--duration-fast);
+            transition: all var(--duration-fast);
           }
 
-          .btn-launch-deck:hover {
-            transform: translateY(-1px);
+          .btn-launch-deck.loading {
+            opacity: 0.85;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+          }
+
+          .btn-launch-deck:active:not(:disabled) {
+            transform: scale(0.98);
+          }
+
+          .btn-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(0, 0, 0, 0.25);
+            border-top-color: #06080d;
+            border-radius: 50%;
+            animation: btn-spin 0.65s linear infinite;
+          }
+
+          @keyframes btn-spin {
+            to {
+              transform: rotate(360deg);
+            }
           }
         `}</style>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MealCardProposal } from '@/types/nutrition';
 import { Sparkles, Clock, Check, X, Info, ChefHat } from 'lucide-react';
 
@@ -28,6 +28,12 @@ export function SwipeDeck({
 
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setDragOffset({ x: 0, y: 0 });
+    setStamp(null);
+  }, [cards]);
 
   const currentCard = cards[currentIndex];
   const nextCard = cards[currentIndex + 1];
