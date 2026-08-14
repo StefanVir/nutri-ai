@@ -371,8 +371,7 @@ export default function Home() {
 
         <PreSwipeModal
           isOpen={isPreSwipeModalOpen}
-          userProfile={profile}
-          defaultCategory={preSwipeCategory}
+          currentCategory={preSwipeCategory}
           remainingCalories={remainingCalories}
           remainingProtein={remainingProtein}
           remainingCarbs={remainingCarbs}
