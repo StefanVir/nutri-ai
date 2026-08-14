@@ -47,11 +47,19 @@ export const VisionMealOutputSchema = z.object({
   protein: z.number().nonnegative(),
   carbs: z.number().nonnegative(),
   fat: z.number().nonnegative(),
+  spatialReasoning: z.object({
+    scaleAnchor: z.string().default('Farfurie și tacâmuri'),
+    calculationNotes: z.string().default(''),
+  }).optional(),
   detectedItems: z.array(
     z.object({
       name: z.string(),
+      dimensionsEstimate: z.string().optional(),
       estimatedGrams: z.number().nonnegative().optional(),
       calories: z.number().nonnegative().optional(),
+      protein: z.number().nonnegative().optional(),
+      carbs: z.number().nonnegative().optional(),
+      fat: z.number().nonnegative().optional(),
     })
   ).default([]),
   confidenceNotes: z.string().default(''),
@@ -62,4 +70,5 @@ export type MealCardProposal = z.infer<typeof MealCardProposalSchema>;
 export type MealCardDeck = z.infer<typeof MealCardDeckSchema>;
 export type QuickLogOutput = z.infer<typeof QuickLogOutputSchema>;
 export type VisionMealOutput = z.infer<typeof VisionMealOutputSchema>;
+
 

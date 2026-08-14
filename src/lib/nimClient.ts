@@ -197,7 +197,19 @@ export async function analyzeFoodImageWithNIM(
   protein: number;
   carbs: number;
   fat: number;
-  detectedItems: { name: string; estimatedGrams?: number; calories?: number }[];
+  spatialReasoning?: {
+    scaleAnchor: string;
+    calculationNotes: string;
+  };
+  detectedItems: {
+    name: string;
+    dimensionsEstimate?: string;
+    estimatedGrams?: number;
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  }[];
   confidenceNotes: string;
 }> {
   const client = getOpenAIClient();
@@ -210,34 +222,53 @@ export async function analyzeFoodImageWithNIM(
       carbs: 45,
       fat: 15,
       detectedItems: [{ name: 'Aliment detectat vizual', estimatedGrams: 250, calories: 450 }],
-      confidenceNotes: 'Pentru recunoaștere foto avansată prin Llama 3.2 90B Vision, adaugă cheia NVIDIA NIM.',
+      confidenceNotes: 'Pentru recunoaștere foto avansată prin Llama 3.2 Vision, adaugă cheia NVIDIA NIM.',
     };
   }
 
-  const systemPrompt = `You are an expert culinary and sports nutrition computer vision AI.
-Look carefully at the actual food, ingredients, sauces, and drinks in the provided image.
-Do NOT repeat any placeholder or template text. Inspect the specific items on the plate (e.g. fish type, meat, potatoes/fries, sauce bowls, drinks).
+  const systemPrompt = `You are an elite computer vision and biomechanical nutrition AI specialist.
+Your task is to conduct an AUTONOMOUS DIMENSIONAL AND SPATIAL REASONING analysis of the food in the photo:
 
-Analyze each component accurately and output strictly valid JSON in Romanian adhering to this structure:
+1. SPATIAL ANCHORING & SCALE:
+   - Identify reference objects in the scene (e.g. standard dinner plate ~25-27cm, fork ~19cm, drink glass, bowl size).
+   - Use their geometric proportions to calibrate real-world dimensions in centimeters.
+
+2. COMPONENT DECOMPOSITION & 3D VOLUME ESTIMATION:
+   - Segment every visible item (meat/fish, sides, fries, sauces, beverages).
+   - Estimate the physical dimensions (length x width x thickness/depth in cm) and calculate the 3D volume (cm³).
+
+3. MASS & MACRO DERIVATION:
+   - Multiply the derived volume by realistic food densities (e.g. cooked fish/meat ~1.1g/cm³, fries/wedges ~0.7g/cm³, liquids/yogurt ~1.0g/cm³).
+   - Calculate exact Calories, Protein, Carbs, and Fat derived directly from the computed mass in grams.
+
+Respond STRICTLY in valid JSON adhering to this schema:
 {
-  "title": "<Short appetizing name of the meal in Romanian based on what you actually see>",
-  "calories": <total integer calories>,
-  "protein": <total grams of protein>,
-  "carbs": <total grams of carbohydrates>,
-  "fat": <total grams of fat>,
+  "title": "<Concise descriptive title in Romanian based on identified items>",
+  "calories": <integer sum of all item calories>,
+  "protein": <integer sum of all item protein>,
+  "carbs": <integer sum of all item carbs>,
+  "fat": <integer sum of all item fat>,
+  "spatialReasoning": {
+    "scaleAnchor": "<Reference objects used to calibrate scale, e.g. Farfurie ~26cm, furculiță ~19cm>",
+    "calculationNotes": "<Brief summary of how dimensions and volumes were calculated from visual perspective>"
+  },
   "detectedItems": [
     {
-      "name": "<name of specific food item detected>",
-      "estimatedGrams": <estimated weight in grams>,
-      "calories": <calories for this item>
+      "name": "<Item name in Romanian>",
+      "dimensionsEstimate": "<Calculated dimensions, e.g. ~14x7x1.5 cm>",
+      "estimatedGrams": <calculated weight in grams>,
+      "calories": <calories>,
+      "protein": <protein grams>,
+      "carbs": <carbs grams>,
+      "fat": <fat grams>
     }
   ],
-  "confidenceNotes": "<A genuine Romanian explanation of the detected food items on the plate, portion size estimates, and macro breakdown>"
+  "confidenceNotes": "<Detailed explanation of the visual breakdown and nutritional assessment in Romanian>"
 }`;
 
   const promptText = userHint && userHint.trim().length > 0
-    ? `Analizează cu atenție mâncarea din imagine. Notă utilizator: "${userHint.trim()}". Identifică exact ingredientele vizibile pe farfurie (inclusiv sosuri, garnituri, carne/pește, băuturi) și calculează valorile nutriționale.`
-    : 'Analizează cu atenție mâncarea din imagine. Identifică exact fiecare element vizibil pe farfurie și pe masă (carne/pește, cartofi/garnituri, boluri cu sos, băuturi) și calculează gramajele și macronutrienții reali.';
+    ? `Analizează această imagine folosind raționamentul spațial și dimensional. Notiță utilizator: "${userHint.trim()}". Măsoară proporțiile, estimează dimensiunile și calculează gramajele și macronutrienții fiecărui element.`
+    : 'Analizează această imagine folosind raționamentul spațial și dimensional. Măsoară proporțiile pe baza ancorelor vizuale, estimează dimensiunile (L x l x grosime), deduce gramajele și calculează macronutrienții fiecărui aliment și băutură.';
 
   try {
     const completion = await client.chat.completions.create({
@@ -252,12 +283,12 @@ Analyze each component accurately and output strictly valid JSON in Romanian adh
           ],
         },
       ],
-      temperature: 0.2,
-      max_tokens: 600,
+      temperature: 0.15,
+      max_tokens: 800,
     });
 
     const content = completion.choices[0]?.message?.content;
-    if (!content) throw new Error('Empty response from 90B Vision model');
+    if (!content) throw new Error('Empty response from Vision model');
 
     const rawJson = parseJsonResponse(content);
     return {
@@ -266,21 +297,23 @@ Analyze each component accurately and output strictly valid JSON in Romanian adh
       protein: Number(rawJson.protein) || 25,
       carbs: Number(rawJson.carbs) || 40,
       fat: Number(rawJson.fat) || 15,
+      spatialReasoning: rawJson.spatialReasoning,
       detectedItems: Array.isArray(rawJson.detectedItems) ? rawJson.detectedItems : [],
-      confidenceNotes: rawJson.confidenceNotes || 'Analiză foto efectuată cu succes.',
+      confidenceNotes: rawJson.confidenceNotes || 'Analiză spațială și dimensională efectuată.',
     };
   } catch (err: any) {
-    console.error('Vision analysis error on NIM 90B:', err);
+    console.error('Vision spatial reasoning error on NIM:', err);
     return {
       title: 'Mâncare Scanată Foto',
       calories: 450,
       protein: 28,
       carbs: 45,
       fat: 16,
-      detectedItems: [{ name: 'Porție mixtă mâncare', estimatedGrams: 300, calories: 450 }],
+      detectedItems: [{ name: 'Porție mâncare', estimatedGrams: 300, calories: 450 }],
       confidenceNotes: 'Estimare ajustată.',
     };
   }
 }
+
 
 

@@ -379,14 +379,30 @@ export function QuickLogModal({
                 <h4 className="preview-meal-title">{parsedPreview.title}</h4>
               </div>
 
-              {/* Detected items list if from photo */}
+              {/* Spatial Reasoning Banner */}
+              {parsedPreview.spatialReasoning && (
+                <div className="spatial-banner">
+                  <div className="spatial-head">
+                    <span className="spatial-title">📐 Calibrare Spațială & Dimensiuni</span>
+                    {parsedPreview.spatialReasoning.scaleAnchor && (
+                      <span className="spatial-anchor">Ref: {parsedPreview.spatialReasoning.scaleAnchor}</span>
+                    )}
+                  </div>
+                  {parsedPreview.spatialReasoning.calculationNotes && (
+                    <p className="spatial-notes">{parsedPreview.spatialReasoning.calculationNotes}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Detected items list with dimensions */}
               {parsedPreview.detectedItems && parsedPreview.detectedItems.length > 0 && (
                 <div className="detected-items-wrap">
-                  <span className="detected-label">Componente identificate vizual pe farfurie:</span>
+                  <span className="detected-label">Componente & Dimensiuni Măsurate:</span>
                   <div className="detected-list">
                     {parsedPreview.detectedItems.map((item, idx) => (
                       <div key={idx} className="detected-item-pill">
                         <span className="item-name">{item.name}</span>
+                        {item.dimensionsEstimate && <span className="item-dim">[{item.dimensionsEstimate}]</span>}
                         {item.estimatedGrams && <span className="item-grams">~{item.estimatedGrams}g</span>}
                         {item.calories && <span className="item-cals">({item.calories} kcal)</span>}
                       </div>
@@ -831,6 +847,45 @@ export function QuickLogModal({
             color: var(--text-primary);
           }
 
+          /* Spatial Reasoning Styles */
+          .spatial-banner {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .spatial-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+          }
+
+          .spatial-title {
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: #a5b4fc;
+          }
+
+          .spatial-anchor {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: var(--radius-full);
+          }
+
+          .spatial-notes {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            line-height: 1.35;
+          }
+
           .detected-items-wrap {
             display: flex;
             flex-direction: column;
@@ -862,6 +917,12 @@ export function QuickLogModal({
             border-radius: var(--radius-full);
             font-size: 0.72rem;
             color: #6ee7b7;
+          }
+
+          .item-dim {
+            font-size: 0.65rem;
+            color: #93c5fd;
+            font-weight: 600;
           }
 
           .item-grams {
