@@ -1,9 +1,9 @@
-﻿import OpenAI from 'openai';
+import OpenAI from 'openai';
 import { PreSwipeContext, MealCardProposal } from '@/types/nutrition';
 import { MealCardDeckSchema, QuickLogOutputSchema, QuickLogOutput } from './schemas';
 import { filterOrGenerateRecipes } from './mockRecipes';
 
-// NVIDIA NIM OpenAI-Compatible API Configuration
+// NVIDIA NIM OpenAI-Compatible Endpoint
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
 const PRIMARY_MODEL = 'meta/llama-3.1-70b-instruct';
 
@@ -17,23 +17,34 @@ function getOpenAIClient(): OpenAI | null {
   });
 }
 
+function parseJsonResponse(raw: string): any {
+  if (!raw) throw new Error('Empty text content');
+
+  // Strip markdown code fences if model returns ```json ... ```
+  let cleaned = raw.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  }
+
+  return JSON.parse(cleaned);
+}
+
 export async function generateNIMMealDeck(context: PreSwipeContext): Promise<MealCardProposal[]> {
   const client = getOpenAIClient();
 
   if (!client) {
-    console.warn('NVIDIA_NIM_API_KEY is not set. Using curated local engine recipes.');
     return filterOrGenerateRecipes(context);
   }
 
   const systemPrompt = `You are an elite culinary chef and sports nutrition expert for NutriAI.
 You generate personalized meal cards tailored strictly to the user's metabolic remaining macros, fridge items, appliances, and budget.
 
-You MUST respond strictly in valid JSON adhering to this exact schema:
+Respond STRICTLY in valid JSON adhering to this schema:
 {
   "recipes": [
     {
-      "id": "unique-recipe-id",
-      "title": "Clear Appetizing Recipe Title in Romanian",
+      "id": "nim-recipe-1",
+      "title": "Numele Rețetei în Română",
       "mode": "${context.mode}",
       "calories": 550,
       "protein": 45,
@@ -43,10 +54,10 @@ You MUST respond strictly in valid JSON adhering to this exact schema:
       "cookTimeMinutes": 15,
       "difficulty": "Ușor",
       "servings": ${context.servings},
-      "appliancesUsed": ["Airfryer"],
+      "appliancesUsed": ["Airfryer / Friteuză cu aer cald"],
       "estimatedCostRon": 18,
-      "matchReason": "Why this meal is ideal for the current macro budget and available ingredients in Romanian",
-      "tags": ["High Protein", "Airfryer", "Quick"],
+      "matchReason": "De ce este ideală pentru profilul tău caloric și ingredientele din frigider",
+      "tags": ["High Protein", "Rapid"],
       "ingredients": [
         {
           "name": "Piept de pui",
@@ -67,20 +78,20 @@ You MUST respond strictly in valid JSON adhering to this exact schema:
   const userPrompt = `Context details:
 - Mode: ${context.mode} (${
     context.mode === 'fridge'
-      ? 'Cook with current fridge pantry ingredients only'
+      ? 'Gătesc doar cu ce am în frigider'
       : context.mode === 'grocery_empty'
-      ? `Empty fridge - Total budget ceiling: ${context.maxBudgetRon || 30} RON`
+      ? `Frigider gol - Buget maxim total: ${context.maxBudgetRon || 30} RON`
       : context.mode === 'grocery_stock'
-      ? `Have base ingredients + Additional grocery budget: ${context.maxBudgetRon || 15} RON`
-      : 'Restaurant guide mode'
+      ? `Am ingrediente de bază + Buget suplimentar magazin: ${context.maxBudgetRon || 15} RON`
+      : 'Ghid restaurant'
   })
-- Meal Category: ${context.mealCategory}
-- Servings: ${context.servings}
-- Appliances: ${context.appliances.length > 0 ? context.appliances.join(', ') : 'Any / Standard kitchen'}
-- Available in fridge: ${context.fridgeIngredients.length > 0 ? context.fridgeIngredients.join(', ') : 'None (empty fridge)'}
-- Remaining Macros Today: ~${context.remainingCalories} kcal, ~${context.remainingProtein}g Protein, ~${context.remainingCarbs}g Carbs, ~${context.remainingFat}g Fat.
+- Categorie masă: ${context.mealCategory}
+- Porții: ${context.servings}
+- Echipamente: ${context.appliances.length > 0 ? context.appliances.join(', ') : 'Bucătărie standard'}
+- Ingrediente disponibile: ${context.fridgeIngredients.length > 0 ? context.fridgeIngredients.join(', ') : 'Niciunul'}
+- Macro-uri rămase azi: ~${context.remainingCalories} kcal, ~${context.remainingProtein}g Proteine, ~${context.remainingCarbs}g Carbohidrați, ~${context.remainingFat}g Grăsimi.
 
-Generate 3-4 diverse, delicious and realistic meal options in Romanian adhering strictly to these constraints.`;
+Generează 3-4 opțiuni de mese gustoase, diversificate și realiste în limba Română, respectând cu strictețe aceste constrângeri.`;
 
   try {
     const completion = await client.chat.completions.create({
@@ -89,28 +100,23 @@ Generate 3-4 diverse, delicious and realistic meal options in Romanian adhering 
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      temperature: 0.5,
+      temperature: 0.4,
       max_tokens: 2500,
-      response_format: { type: 'json_object' },
     });
 
     const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      console.warn('Empty response from NVIDIA NIM. Using fallback.');
-      return filterOrGenerateRecipes(context);
-    }
+    if (!content) return filterOrGenerateRecipes(context);
 
-    const rawJson = JSON.parse(content);
+    const rawJson = parseJsonResponse(content);
     const parsed = MealCardDeckSchema.safeParse(rawJson);
 
-    if (parsed.success) {
+    if (parsed.success && parsed.data.recipes.length > 0) {
       return parsed.data.recipes as MealCardProposal[];
     } else {
-      console.warn('Zod validation warning on NIM response:', parsed.error.format());
       return filterOrGenerateRecipes(context);
     }
   } catch (error) {
-    console.error('NVIDIA NIM call failed:', error);
+    console.error('NVIDIA NIM API error:', error);
     return filterOrGenerateRecipes(context);
   }
 }
@@ -125,19 +131,19 @@ export async function parseQuickAILog(textDescription: string): Promise<QuickLog
       protein: 22,
       carbs: 45,
       fat: 12,
-      confidenceNotes: 'Estimare calculată din descrierea alimentului (Modul Offline).',
+      confidenceNotes: 'Estimare calculată din descriere (Modul Offline).',
     };
   }
 
-  const systemPrompt = `You are a nutrition analyst. Given a natural language description of food/drink consumed, extract estimated nutritional values.
-Respond strictly in valid JSON:
+  const systemPrompt = `You are an elite sports nutrition analyst. Given a natural language description of food/drink consumed, extract estimated nutritional values.
+Respond STRICTLY in valid JSON:
 {
-  "title": "Short Clean Meal Name in Romanian (e.g. 2 Ouă Ochiuri cu Pâine Prăjită)",
+  "title": "Nume Clar și Scurt al Preparatului în Română",
   "calories": 350,
   "protein": 24,
   "carbs": 30,
   "fat": 14,
-  "confidenceNotes": "Estimated breakdown justification in Romanian"
+  "confidenceNotes": "Scurtă justificare a valorilor nutriționale estimate în Română"
 }`;
 
   try {
@@ -145,17 +151,16 @@ Respond strictly in valid JSON:
       model: PRIMARY_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Analyze: "${textDescription}"` },
+        { role: 'user', content: `Analizează preparatul: "${textDescription}"` },
       ],
       temperature: 0.2,
       max_tokens: 500,
-      response_format: { type: 'json_object' },
     });
 
     const content = completion.choices[0]?.message?.content;
     if (!content) throw new Error('Empty response');
 
-    const rawJson = JSON.parse(content);
+    const rawJson = parseJsonResponse(content);
     const parsed = QuickLogOutputSchema.safeParse(rawJson);
 
     if (parsed.success) {
@@ -171,7 +176,7 @@ Respond strictly in valid JSON:
       };
     }
   } catch (err) {
-    console.error('Quick AI Log parse error:', err);
+    console.error('Quick AI Log error:', err);
     return {
       title: textDescription.slice(0, 35),
       calories: 350,

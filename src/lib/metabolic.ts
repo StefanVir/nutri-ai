@@ -1,4 +1,4 @@
-﻿import { ActivityLevel, Gender, Goal, UserProfile } from '@/types/nutrition';
+import { ActivityLevel, Gender, Goal, UserProfile } from '@/types/nutrition';
 
 export const ACTIVITY_MULTIPLIERS: Record<ActivityLevel, number> = {
   sedentary: 1.2,
@@ -73,6 +73,8 @@ export function calculateMetabolicTargets(
     fatGrams,
   };
 }
+
+export const calculateMetabolicPlan = calculateMetabolicTargets;
 
 export const DEFAULT_APPLIANCES = [
   { id: 'airfryer', name: 'Airfryer / Friteuză cu aer cald' },
