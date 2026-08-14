@@ -1,386 +1,313 @@
-'use client';
+﻿'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { MealCardProposal, PreSwipeContext } from '@/types/nutrition';
-import {
-  Heart,
-  X,
-  Clock,
-  Flame,
-  Dumbbell,
-  Tag,
-  Eye,
-  Sparkles,
-  RotateCcw,
-  Layers,
-  ArrowRight,
-} from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { MealCardProposal } from '@/types/nutrition';
+import { Sparkles, Clock, Check, X, Info, ChefHat } from 'lucide-react';
 
 interface SwipeDeckProps {
-  initialRecipes: MealCardProposal[];
-  context: PreSwipeContext;
-  onShortlistRecipe: (recipe: MealCardProposal) => void;
-  onOpenDetails: (recipe: MealCardProposal) => void;
-  onTriggerShowdown: () => void;
-  shortlistedMeals: MealCardProposal[];
-  onBackToConfig: () => void;
+  cards: MealCardProposal[];
+  onSwipeRight: (card: MealCardProposal) => void;
+  onSwipeLeft: (card: MealCardProposal) => void;
+  onOpenDetails: (card: MealCardProposal) => void;
+  onStartShowdown: () => void;
+  shortlistCount: number;
 }
 
 export function SwipeDeck({
-  initialRecipes,
-  context,
-  onShortlistRecipe,
+  cards,
+  onSwipeRight,
+  onSwipeLeft,
   onOpenDetails,
-  onTriggerShowdown,
-  shortlistedMeals,
-  onBackToConfig,
+  onStartShowdown,
+  shortlistCount,
 }: SwipeDeckProps) {
-  const [deck, setDeck] = useState<MealCardProposal[]>(initialRecipes);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [stamp, setStamp] = useState<'like' | 'skip' | null>(null);
 
-  const activeCard = deck[0];
-  const nextCard = deck[1];
+  const cardRef = useRef<HTMLDivElement>(null);
+  const startPos = useRef({ x: 0, y: 0 });
 
-  // Drag physics threshold
-  const SWIPE_THRESHOLD = 85;
+  const currentCard = cards[currentIndex];
+  const nextCard = cards[currentIndex + 1];
 
   const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!currentCard) return;
+    setIsDragging(true);
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    setIsDragging(true);
-    setDragStart({ x: clientX, y: clientY });
+    startPos.current = { x: clientX, y: clientY };
   };
 
   const handleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !currentCard) return;
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    setDragOffset({
-      x: clientX - dragStart.x,
-      y: clientY - dragStart.y,
-    });
+    const diffX = clientX - startPos.current.x;
+    const diffY = clientY - startPos.current.y;
+
+    setDragOffset({ x: diffX, y: diffY * 0.4 });
+
+    if (diffX > 45) {
+      setStamp('like');
+    } else if (diffX < -45) {
+      setStamp('skip');
+    } else {
+      setStamp(null);
+    }
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (!isDragging || !currentCard) return;
     setIsDragging(false);
 
-    if (dragOffset.x > SWIPE_THRESHOLD) {
-      // Swiped Right -> Shortlist
-      handleSwipeRight();
-    } else if (dragOffset.x < -SWIPE_THRESHOLD) {
-      // Swiped Left -> Skip
-      handleSwipeLeft();
+    if (dragOffset.x > 90) {
+      executeSwipe('right');
+    } else if (dragOffset.x < -90) {
+      executeSwipe('left');
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+      setStamp(null);
+    }
+  };
+
+  const executeSwipe = (direction: 'right' | 'left') => {
+    if (!currentCard) return;
+    if (direction === 'right') {
+      onSwipeRight(currentCard);
+    } else {
+      onSwipeLeft(currentCard);
     }
 
-    setDragOffset({ x: 0, y: 0 });
+    setDragOffset({ x: direction === 'right' ? 400 : -400, y: 0 });
+    setTimeout(() => {
+      setCurrentIndex((prev) => prev + 1);
+      setDragOffset({ x: 0, y: 0 });
+      setStamp(null);
+    }, 200);
   };
 
-  const handleSwipeRight = () => {
-    if (!activeCard) return;
-    onShortlistRecipe(activeCard);
-    setDeck((prev) => prev.slice(1));
-  };
+  if (!currentCard) {
+    return (
+      <div className="empty-deck-card">
+        <div className="empty-icon-wrap">
+          <Sparkles size={32} className="sparkle-gold" />
+        </div>
+        <h3 className="empty-title">Ai parcurs toate propunerile!</h3>
+        <p className="empty-desc">
+          Ai selectat <strong>{shortlistCount} rețete favorite</strong>. Intră în Matchup Showdown pentru alegerea finală.
+        </p>
+        {shortlistCount >= 2 ? (
+          <button type="button" onClick={onStartShowdown} className="btn-cta-showdown">
+            <ChefHat size={18} />
+            Pornește Matchup Showdown ({shortlistCount})
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setCurrentIndex(0)}
+            className="btn-cta-showdown"
+          >
+            Reîncarcă Deck-ul de Rețete
+          </button>
+        )}
+      </div>
+    );
+  }
 
-  const handleSwipeLeft = () => {
-    if (!activeCard) return;
-    setDeck((prev) => prev.slice(1));
-  };
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') handleSwipeRight();
-      if (e.key === 'ArrowLeft') handleSwipeLeft();
-      if (e.key === 'ArrowUp' && activeCard) onOpenDetails(activeCard);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeCard]);
-
-  // Compute rotation angle & opacity based on drag
-  const rotateDeg = dragOffset.x * 0.08;
-  const likeOpacity = Math.min(1, Math.max(0, dragOffset.x / 70));
-  const skipOpacity = Math.min(1, Math.max(0, -dragOffset.x / 70));
+  const rotation = dragOffset.x * 0.08;
 
   return (
-    <div className="swipe-screen animate-fade-in">
-      {/* Top Header & Shortlist Counter */}
-      <div className="swipe-top-bar">
-        <button type="button" className="btn-filter-back" onClick={onBackToConfig}>
-          <RotateCcw size={15} />
-          <span>Filtre</span>
+    <div className="deck-container">
+      {/* Shortlist Progress Bar */}
+      <div className="deck-header">
+        <div className="deck-mode-indicator">
+          <span className="deck-counter">Opțiunea {currentIndex + 1} din {cards.length}</span>
+        </div>
+        {shortlistCount > 0 && (
+          <button
+            type="button"
+            onClick={onStartShowdown}
+            className="btn-quick-showdown"
+          >
+            <ChefHat size={14} />
+            Showdown ({shortlistCount})
+          </button>
+        )}
+      </div>
+
+      {/* Card Stack Area */}
+      <div className="cards-stage">
+        {/* Next Card Background Shadow */}
+        {nextCard && (
+          <div className="deck-card next-card">
+            <div className="card-inner">
+              <div className="card-top-tags">
+                <span className="mode-badge">{nextCard.mode}</span>
+                <span className="card-time-pill">
+                  <Clock size={13} /> {nextCard.prepTimeMinutes + nextCard.cookTimeMinutes}m
+                </span>
+              </div>
+              <h3 className="card-title">{nextCard.title}</h3>
+            </div>
+          </div>
+        )}
+
+        {/* Active Draggable Card */}
+        <div
+          ref={cardRef}
+          className="deck-card active-card"
+          style={{
+            transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotation}deg)`,
+            transition: isDragging ? 'none' : 'transform 0.3s var(--ease-out-smooth)',
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleTouchStart}
+          onMouseMove={handleTouchMove}
+          onMouseUp={handleTouchEnd}
+        >
+          {/* Stamp Feedback */}
+          {stamp === 'like' && <div className="stamp stamp-like">ACCEPTAT</div>}
+          {stamp === 'skip' && <div className="stamp stamp-skip">URMĂTORUL</div>}
+
+          <div className="card-inner">
+            <div className="card-top-tags">
+              <span className="mode-badge">
+                {currentCard.mode === 'fridge' ? 'Din Frigider' : currentCard.mode === 'grocery_empty' ? 'Buget Fix' : 'Smart Grocery'}
+              </span>
+              <span className="card-time-pill">
+                <Clock size={13} /> {currentCard.prepTimeMinutes + currentCard.cookTimeMinutes} min
+              </span>
+            </div>
+
+            <h3 className="card-title">{currentCard.title}</h3>
+
+            <div className="match-reason-box">
+              <Sparkles size={14} className="reason-icon" />
+              <span>{currentCard.matchReason}</span>
+            </div>
+
+            {/* Macro Grid */}
+            <div className="card-macros-grid">
+              <div className="macro-box box-cal">
+                <span className="macro-val tabular-num">{currentCard.calories}</span>
+                <span className="macro-lbl">kcal</span>
+              </div>
+              <div className="macro-box box-prot">
+                <span className="macro-val tabular-num">{currentCard.protein}g</span>
+                <span className="macro-lbl">Prot</span>
+              </div>
+              <div className="macro-box box-carb">
+                <span className="macro-val tabular-num">{currentCard.carbs}g</span>
+                <span className="macro-lbl">Carb</span>
+              </div>
+              <div className="macro-box box-fat">
+                <span className="macro-val tabular-num">{currentCard.fat}g</span>
+                <span className="macro-lbl">Grăs</span>
+              </div>
+            </div>
+
+            {/* Ingredients Summary */}
+            <div className="card-ingredients-preview">
+              <span className="ingr-head">Ingrediente principale:</span>
+              <div className="ingr-tags-wrap">
+                {currentCard.ingredients.slice(0, 4).map((ing, i) => (
+                  <span key={i} className={`ingr-tag ${ing.toBuy ? 'to-buy-tag' : ''}`}>
+                    {ing.name} ({ing.amount})
+                  </span>
+                ))}
+                {currentCard.ingredients.length > 4 && (
+                  <span className="ingr-more">+{currentCard.ingredients.length - 4} altele</span>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Meta */}
+            <div className="card-footer-meta">
+              <span>{currentCard.appliancesUsed.join(', ')}</span>
+              {currentCard.estimatedCostRon ? (
+                <span className="cost-tag">~{currentCard.estimatedCostRon} RON</span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tactile Control Buttons */}
+      <div className="swipe-controls">
+        <button
+          type="button"
+          onClick={() => executeSwipe('left')}
+          className="btn-ctrl btn-dislike"
+          aria-label="Treci peste"
+        >
+          <X size={24} />
         </button>
 
-        <div className="shortlist-status-pill">
-          <Layers size={14} className="icon-layers" />
-          <span>Shortlist: <strong className="tabular-num">{shortlistedMeals.length}/3</strong></span>
-        </div>
+        <button
+          type="button"
+          onClick={() => onOpenDetails(currentCard)}
+          className="btn-ctrl btn-info"
+          aria-label="Detalii Rețetă"
+        >
+          <Info size={20} />
+        </button>
 
-        {shortlistedMeals.length >= 2 ? (
-          <button type="button" className="btn-showdown-quick animate-fade-in" onClick={onTriggerShowdown}>
-            <span>Showdown</span>
-            <ArrowRight size={14} />
-          </button>
-        ) : (
-          <div style={{ width: 60 }} />
-        )}
+        <button
+          type="button"
+          onClick={() => executeSwipe('right')}
+          className="btn-ctrl btn-like"
+          aria-label="Adaugă în Shortlist"
+        >
+          <Check size={26} />
+        </button>
       </div>
-
-      {/* Card Deck Viewport */}
-      <div className="deck-viewport">
-        {deck.length === 0 ? (
-          <div className="empty-deck-card animate-fade-in">
-            <div className="empty-icon-wrap">
-              <Sparkles size={32} className="sparkle-gold" />
-            </div>
-            <h3 className="empty-title">Ai parcurs toate propunerile!</h3>
-            <p className="empty-desc">
-              {shortlistedMeals.length > 0
-                ? `Ai ${shortlistedMeals.length} rețete în Shortlist gata de confruntare.`
-                : 'Schimbă filtrele sau adaugă alte ingrediente pentru opțiuni noi.'}
-            </p>
-
-            {shortlistedMeals.length >= 2 ? (
-              <button type="button" className="btn-cta-showdown" onClick={onTriggerShowdown}>
-                <Sparkles size={18} />
-                <span>Deschide Matchup Showdown ({shortlistedMeals.length})</span>
-              </button>
-            ) : (
-              <button type="button" className="btn-cta-showdown" onClick={onBackToConfig}>
-                <RotateCcw size={18} />
-                <span>Reconfigurează Căutarea</span>
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="cards-stack">
-            {/* Background Preview Card */}
-            {nextCard && (
-              <div className="deck-card next-card">
-                <div className="card-inner">
-                  <div className="card-top-tags">
-                    <span className="mode-badge">{nextCard.mode}</span>
-                    <span className="time-badge">{nextCard.prepTimeMinutes + nextCard.cookTimeMinutes} min</span>
-                  </div>
-                  <h3 className="card-title">{nextCard.title}</h3>
-                </div>
-              </div>
-            )}
-
-            {/* Active Swipe Card */}
-            {activeCard && (
-              <div
-                className="deck-card active-card"
-                style={{
-                  transform: isDragging
-                    ? `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotateDeg}deg)`
-                    : 'translate3d(0, 0, 0) rotate(0deg)',
-                  transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onMouseDown={handleTouchStart}
-                onMouseMove={handleTouchMove}
-                onMouseUp={handleTouchEnd}
-                onMouseLeave={handleTouchEnd}
-              >
-                {/* Swipe Stamp Indicators */}
-                <div className="stamp stamp-like" style={{ opacity: likeOpacity }}>
-                  SHORTLIST ❤️
-                </div>
-                <div className="stamp stamp-skip" style={{ opacity: skipOpacity }}>
-                  SKIP ❌
-                </div>
-
-                <div className="card-inner">
-                  {/* Top Bar on Card */}
-                  <div className="card-top-tags">
-                    <span className="mode-badge">
-                      {activeCard.mode === 'fridge' && '🧊 Din Frigider'}
-                      {activeCard.mode === 'grocery_empty' && '🛒 Frigider Gol'}
-                      {activeCard.mode === 'grocery_stock' && '🛒 Smart Grocery'}
-                      {activeCard.mode === 'restaurant' && '🍽️ Restaurant'}
-                    </span>
-                    <div className="card-time-pill">
-                      <Clock size={13} />
-                      <span className="tabular-num">{activeCard.prepTimeMinutes + activeCard.cookTimeMinutes} min</span>
-                    </div>
-                  </div>
-
-                  {/* Recipe Title */}
-                  <h3 className="card-title">{activeCard.title}</h3>
-
-                  {/* AI Match Reason Callout */}
-                  <div className="match-reason-box">
-                    <Sparkles size={14} className="reason-icon" />
-                    <span>{activeCard.matchReason}</span>
-                  </div>
-
-                  {/* Macro Badges Grid */}
-                  <div className="card-macros-grid">
-                    <div className="macro-box box-cal">
-                      <Flame size={14} className="icon-cal" />
-                      <span className="macro-val tabular-num">{activeCard.calories}</span>
-                      <span className="macro-lbl">kcal</span>
-                    </div>
-                    <div className="macro-box box-prot">
-                      <Dumbbell size={14} className="icon-prot" />
-                      <span className="macro-val tabular-num">{activeCard.protein}g</span>
-                      <span className="macro-lbl">Proteine</span>
-                    </div>
-                    <div className="macro-box box-carb">
-                      <span className="macro-val tabular-num">{activeCard.carbs}g</span>
-                      <span className="macro-lbl">Carbo</span>
-                    </div>
-                    <div className="macro-box box-fat">
-                      <span className="macro-val tabular-num">{activeCard.fat}g</span>
-                      <span className="macro-lbl">Grăsimi</span>
-                    </div>
-                  </div>
-
-                  {/* Ingredients Preview */}
-                  <div className="card-ingredients-preview">
-                    <span className="ingr-head">Ingrediente Cheie ({activeCard.ingredients.length}):</span>
-                    <div className="ingr-tags-wrap">
-                      {activeCard.ingredients.slice(0, 4).map((ing, idx) => (
-                        <span key={idx} className={`ingr-tag ${ing.toBuy ? 'to-buy-tag' : ''}`}>
-                          {ing.name} ({ing.amount})
-                        </span>
-                      ))}
-                      {activeCard.ingredients.length > 4 && (
-                        <span className="ingr-more">+{activeCard.ingredients.length - 4} altele</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Cost & Appliances Footnote */}
-                  <div className="card-footer-meta">
-                    {activeCard.estimatedCostRon && (
-                      <span className="cost-tag tabular-num">
-                        Cost estimat: ~{activeCard.estimatedCostRon} RON
-                      </span>
-                    )}
-                    {activeCard.appliancesUsed.length > 0 && (
-                      <span className="app-tag">{activeCard.appliancesUsed.join(', ')}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Thumb-Zone Control Bar */}
-      {activeCard && (
-        <div className="swipe-controls">
-          <button
-            type="button"
-            className="btn-ctrl btn-dislike"
-            onClick={handleSwipeLeft}
-            aria-label="Skip Rețetă"
-          >
-            <X size={26} />
-          </button>
-
-          <button
-            type="button"
-            className="btn-ctrl btn-info"
-            onClick={() => onOpenDetails(activeCard)}
-            aria-label="Vezi Rețeta Pas cu Pas"
-          >
-            <Eye size={22} />
-          </button>
-
-          <button
-            type="button"
-            className="btn-ctrl btn-like"
-            onClick={handleSwipeRight}
-            aria-label="Adaugă în Shortlist"
-          >
-            <Heart size={26} fill="#10b981" />
-          </button>
-        </div>
-      )}
 
       <style jsx>{`
-        .swipe-screen {
+        .deck-container {
           display: flex;
           flex-direction: column;
-          height: calc(100vh - var(--bottom-bar-height) - 30px);
-          overflow: hidden;
+          gap: 12px;
+          height: calc(100vh - 160px);
+          max-height: 580px;
         }
 
-        .swipe-top-bar {
+        .deck-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 8px 12px;
-          margin-bottom: 8px;
+          padding: 0 4px;
         }
 
-        .btn-filter-back {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          background: var(--bg-card);
-          border: 1px solid var(--border-medium);
-          border-radius: var(--radius-full);
-          font-size: 0.75rem;
+        .deck-counter {
+          font-size: 0.74rem;
           font-weight: 700;
-          color: var(--text-secondary);
+          color: var(--text-tertiary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
 
-        .shortlist-status-pill {
+        .btn-quick-showdown {
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 6px 14px;
-          background: rgba(99, 102, 241, 0.12);
-          border: 1px solid rgba(99, 102, 241, 0.3);
-          border-radius: var(--radius-full);
-          font-size: 0.76rem;
-          font-weight: 700;
-          color: #a5b4fc;
-        }
-
-        :global(.icon-layers) {
-          color: var(--accent-primary);
-        }
-
-        .btn-showdown-quick {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 6px 12px;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          color: #ffffff;
-          border-radius: var(--radius-full);
-          font-size: 0.75rem;
+          gap: 5px;
+          font-size: 0.72rem;
           font-weight: 800;
-          box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+          padding: 5px 12px;
+          background: rgba(16, 185, 129, 0.15);
+          color: var(--macro-protein);
+          border: 1px solid rgba(16, 185, 129, 0.35);
+          border-radius: var(--radius-full);
         }
 
-        .deck-viewport {
+        .cards-stage {
+          position: relative;
           flex: 1;
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 4px 10px;
-        }
-
-        .cards-stack {
-          position: relative;
           width: 100%;
-          height: 100%;
-          max-height: 480px;
+          min-height: 420px;
         }
 
         .deck-card {
@@ -390,7 +317,7 @@ export function SwipeDeck({
           width: 100%;
           height: 100%;
           border-radius: var(--radius-xl);
-          background: linear-gradient(160deg, #192338 0%, #101726 100%);
+          background: linear-gradient(165deg, #151e32 0%, #0d1322 100%);
           border: 1px solid var(--border-medium);
           box-shadow: var(--shadow-lg);
           user-select: none;
@@ -399,8 +326,8 @@ export function SwipeDeck({
         }
 
         .next-card {
-          transform: scale(0.94) translateY(12px);
-          opacity: 0.6;
+          transform: scale(0.95) translateY(12px);
+          opacity: 0.55;
           pointer-events: none;
           z-index: 1;
         }
@@ -412,10 +339,10 @@ export function SwipeDeck({
 
         .stamp {
           position: absolute;
-          top: 24px;
-          padding: 6px 14px;
+          top: 20px;
+          padding: 5px 14px;
           border-radius: var(--radius-sm);
-          font-size: 1.1rem;
+          font-size: 1.05rem;
           font-weight: 900;
           letter-spacing: 0.08em;
           border-width: 3px;
@@ -428,14 +355,14 @@ export function SwipeDeck({
           right: 20px;
           color: var(--macro-protein);
           border-color: var(--macro-protein);
-          transform: rotate(15deg);
+          transform: rotate(14deg);
         }
 
         .stamp-skip {
           left: 20px;
           color: var(--status-error);
           border-color: var(--status-error);
-          transform: rotate(-15deg);
+          transform: rotate(-14deg);
         }
 
         .card-inner {
@@ -449,24 +376,25 @@ export function SwipeDeck({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
         .mode-badge {
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           font-weight: 800;
           padding: 3px 10px;
           border-radius: var(--radius-full);
           background: rgba(255, 255, 255, 0.08);
           color: var(--text-primary);
           border: 1px solid var(--border-subtle);
+          text-transform: uppercase;
         }
 
         .card-time-pill {
           display: flex;
           align-items: center;
           gap: 4px;
-          font-size: 0.75rem;
+          font-size: 0.74rem;
           font-weight: 700;
           color: var(--text-secondary);
         }
@@ -491,7 +419,7 @@ export function SwipeDeck({
           font-size: 0.78rem;
           color: #c7d2fe;
           line-height: 1.35;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         :global(.reason-icon) {
@@ -504,7 +432,7 @@ export function SwipeDeck({
           display: grid;
           grid-template-columns: 1.2fr 1fr 1fr 1fr;
           gap: 6px;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         .macro-box {
@@ -522,18 +450,18 @@ export function SwipeDeck({
         .box-fat { background: var(--macro-fat-bg); color: var(--macro-fat); border: 1px solid rgba(244, 63, 94, 0.2); }
 
         .macro-val { font-size: 0.95rem; font-weight: 800; }
-        .macro-lbl { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; }
+        .macro-lbl { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
 
         .card-ingredients-preview {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 5px;
           margin-bottom: 10px;
         }
 
         .ingr-head {
-          font-size: 0.72rem;
+          font-size: 0.7rem;
           font-weight: 700;
           color: var(--text-tertiary);
           text-transform: uppercase;
@@ -585,13 +513,13 @@ export function SwipeDeck({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 20px;
-          padding: 8px 0;
+          gap: 22px;
+          padding: 6px 0;
         }
 
         .btn-ctrl {
-          width: 58px;
-          height: 58px;
+          width: 56px;
+          height: 56px;
           border-radius: var(--radius-full);
           display: flex;
           align-items: center;
@@ -600,19 +528,15 @@ export function SwipeDeck({
           box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
         }
 
-        .btn-ctrl:hover {
-          transform: scale(1.1);
-        }
-
         .btn-dislike {
-          background: rgba(239, 68, 68, 0.15);
+          background: rgba(239, 68, 68, 0.14);
           color: #ef4444;
-          border: 1px solid rgba(239, 68, 68, 0.4);
+          border: 1px solid rgba(239, 68, 68, 0.35);
         }
 
         .btn-info {
-          width: 48px;
-          height: 48px;
+          width: 46px;
+          height: 46px;
           background: rgba(255, 255, 255, 0.08);
           color: var(--text-secondary);
           border: 1px solid var(--border-medium);
@@ -630,7 +554,7 @@ export function SwipeDeck({
           align-items: center;
           justify-content: center;
           text-align: center;
-          padding: 30px 20px;
+          padding: 36px 20px;
           background: var(--bg-card);
           border: 1px solid var(--border-medium);
           border-radius: var(--radius-xl);

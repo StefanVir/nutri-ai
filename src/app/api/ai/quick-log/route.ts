@@ -1,14 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { parseQuickAILog } from '@/lib/nimClient';
 
-// Vercel Serverless Function Configuration
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const text = body?.text;
+    const text = body?.text || body?.description;
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return NextResponse.json(
@@ -18,7 +17,16 @@ export async function POST(req: NextRequest) {
     }
 
     const parsedMeal = await parseQuickAILog(text.trim());
-    return NextResponse.json({ success: true, meal: parsedMeal });
+    return NextResponse.json({
+      success: true,
+      title: parsedMeal.title,
+      calories: parsedMeal.calories,
+      protein: parsedMeal.protein,
+      carbs: parsedMeal.carbs,
+      fat: parsedMeal.fat,
+      confidenceNotes: parsedMeal.confidenceNotes,
+      meal: parsedMeal,
+    });
   } catch (error: any) {
     console.error('API quick-log error on Vercel:', error);
     return NextResponse.json(

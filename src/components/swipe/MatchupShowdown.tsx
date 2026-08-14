@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { MealCardProposal } from '@/types/nutrition';
-import { Swords, Sparkles, Clock, Flame, Dumbbell, Check, Eye } from 'lucide-react';
+import { Swords, Clock, Flame, Dumbbell, Check, Eye } from 'lucide-react';
 
 interface MatchupShowdownProps {
   shortlistedMeals: MealCardProposal[];
@@ -29,7 +29,7 @@ export function MatchupShowdown({
       {/* Showdown Header */}
       <div className="showdown-header">
         <div className="showdown-badge">
-          <Swords size={16} className="swords-icon" />
+          <Swords size={15} className="swords-icon" />
           <span>Matchup Showdown</span>
         </div>
         <h2 className="showdown-title">Alege Masa Câștigătoare</h2>

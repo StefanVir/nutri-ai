@@ -1,4 +1,4 @@
-﻿# NutriAI — Intelligent Nutrition & Meal Planning Platform
+# NutriAI — Intelligent Nutrition & Meal Planning Platform
 
 ## 🎯 Context & Project Overview
 - **Project:** NutriAI (D:\Intership\nutri-ai)
@@ -22,3 +22,5 @@ Whenever major architectural decisions, research findings, or reusable patterns 
 2. **Frontend Craft:** Use the Impeccable Design engine (.agent/skills/impeccable). Modern typography, sleek dark/light mode, responsive layouts, refined micro-interactions. No generic default templates.
 3. **BMAD Method:** Follow BMAD development workflows (.agents/skills/bmad-*) for PRD creation, architecture specs, story breakdowns, and code reviews.
 4. **Code Quality:** Strict typing, clean modular structure, error boundaries, resilient AI API integrations with structured JSON outputs.
+5. **Environment & Secrets Safety:** Strict interzisă citirea, modificarea sau suprascrierea oricărui fișier `.env` / `.env.local` / `.env.*` fără permisiunea și comanda explicită a utilizatorului.
+

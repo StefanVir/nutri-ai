@@ -1,106 +1,103 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
-import { UserProfile, Gender, Goal, ActivityLevel } from '@/types/nutrition';
-import {
-  calculateMetabolicTargets,
-  ACTIVITY_LABELS,
-  GOAL_LABELS,
-  DEFAULT_APPLIANCES,
-} from '@/lib/metabolic';
-import { Sparkles, ArrowRight, ArrowLeft, Check, Flame, ShieldCheck } from 'lucide-react';
+import { UserProfile, Goal, ActivityLevel, Gender } from '@/types/nutrition';
+import { calculateMetabolicTargets, DEFAULT_APPLIANCES } from '@/lib/metabolic';
+import { Sparkles, ArrowRight, ArrowLeft, Check, Flame, ShieldCheck, Dumbbell, Zap, Heart } from 'lucide-react';
 
 interface OnboardingWizardProps {
   onComplete: (profile: UserProfile) => void;
 }
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState('Alex');
+  const [step, setStep] = useState<number>(1);
+
+  // Form State
+  const [name, setName] = useState<string>('Alex');
   const [gender, setGender] = useState<Gender>('male');
-  const [age, setAge] = useState(24);
-  const [heightCm, setHeightCm] = useState(180);
-  const [weightKg, setWeightKg] = useState(82);
+  const [age, setAge] = useState<number>(24);
+  const [weightKg, setWeightKg] = useState<number>(82);
+  const [heightCm, setHeightCm] = useState<number>(180);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
   const [goal, setGoal] = useState<Goal>('cut');
-  const [selectedAppliances, setSelectedAppliances] = useState<string[]>([
-    'Airfryer / Friteuză cu aer cald',
-    'Aragaz / Plită / Tigaie',
-  ]);
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(['High Protein']);
+  const [appliances, setAppliances] = useState<string[]>(['Airfryer / Friteuză cu aer cald', 'Aragaz / Tigaie']);
 
-  const totalSteps = 5;
-
-  const targets = calculateMetabolicTargets(gender, age, heightCm, weightKg, activityLevel, goal);
-
-  const toggleAppliance = (applianceName: string) => {
-    if (selectedAppliances.includes(applianceName)) {
-      setSelectedAppliances(selectedAppliances.filter((a) => a !== applianceName));
-    } else {
-      setSelectedAppliances([...selectedAppliances, applianceName]);
-    }
-  };
+  // Computed Live Targets
+  const metabolicPlan = calculateMetabolicTargets(
+    gender,
+    age,
+    heightCm,
+    weightKg,
+    activityLevel,
+    goal
+  );
 
   const handleFinish = () => {
     const profile: UserProfile = {
+      id: 'local-user-' + Date.now(),
       name,
       gender,
       age,
-      heightCm,
       weightKg,
+      heightCm,
       activityLevel,
       goal,
-      calorieTarget: targets.targetCalories,
-      proteinTarget: targets.proteinGrams,
-      carbsTarget: targets.carbsGrams,
-      fatTarget: targets.fatGrams,
-      appliances: selectedAppliances,
-      dietaryRestrictions: [],
+      dietaryRestrictions,
+      appliances,
+      calorieTarget: metabolicPlan.targetCalories,
+      proteinTarget: metabolicPlan.proteinGrams,
+      carbsTarget: metabolicPlan.carbsGrams,
+      fatTarget: metabolicPlan.fatGrams,
       hasCompletedOnboarding: true,
     };
     onComplete(profile);
   };
 
+  const toggleDiet = (diet: string) => {
+    setDietaryRestrictions((prev) =>
+      prev.includes(diet) ? prev.filter((d) => d !== diet) : [...prev, diet]
+    );
+  };
+
+  const toggleAppliance = (app: string) => {
+    setAppliances((prev) =>
+      prev.includes(app) ? prev.filter((a) => a !== app) : [...prev, app]
+    );
+  };
+
   return (
-    <div className="onboarding-wrapper animate-fade-in">
-      {/* Header & Step Indicator */}
-      <div className="onboarding-header">
-        <div className="brand-badge">
-          <Sparkles size={16} className="brand-icon" />
-          <span>NutriAI Metabolic Engine</span>
-        </div>
-        <div className="step-bar-wrap">
-          <div className="step-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
-        </div>
-        <div className="step-counter">Pasul {step} din {totalSteps}</div>
+    <div className="onboarding-card animate-fade-in">
+      {/* Step Progress Tracker */}
+      <div className="step-tracker">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <div key={s} className={`step-bar ${s <= step ? 'active' : ''}`} />
+        ))}
       </div>
 
-      {/* Step 1: Nume & Sex */}
+      {/* Step 1: Gender & Goal */}
       {step === 1 && (
-        <div className="step-content animate-fade-in">
-          <h2 className="step-title">Hai să ne cunoaștem</h2>
-          <p className="step-subtitle">Cum te cheamă și care este sexul tău biologic pentru calibrarea metabolică?</p>
-
-          <div className="form-group">
-            <label className="input-label">Prenumele tău</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="text-input"
-              placeholder="ex: Ștefan / Alex"
-            />
+        <div className="step-content animate-slide-up">
+          <div className="step-header">
+            <h2 className="step-title">Care este profilul și obiectivul tău?</h2>
+            <p className="step-desc">
+              Vom calibra motorul metabolic pentru a genera mese optimizate exact pentru corpul tău.
+            </p>
           </div>
 
-          <div className="form-group">
-            <label className="input-label">Sex biologic</label>
+          <div className="section-group">
+            <span className="field-label">Sex biologic:</span>
             <div className="grid-2">
               <button
                 type="button"
                 className={`choice-card ${gender === 'male' ? 'selected' : ''}`}
                 onClick={() => setGender('male')}
               >
-                <div className="choice-title">Băiat 🏃‍♂️</div>
-                <div className="choice-desc">Formula metabolică ms-jeor (male)</div>
+                <div className="choice-icon-wrap">
+                  <Dumbbell size={18} />
+                </div>
+                <strong className="choice-title">Bărbat</strong>
+                <span className="choice-desc">Formula BMR adaptată</span>
               </button>
 
               <button
@@ -108,28 +105,60 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 className={`choice-card ${gender === 'female' ? 'selected' : ''}`}
                 onClick={() => setGender('female')}
               >
-                <div className="choice-title">Fată 🏃‍♀️</div>
-                <div className="choice-desc">Formula metabolică ms-jeor (female)</div>
+                <div className="choice-icon-wrap">
+                  <Heart size={18} />
+                </div>
+                <strong className="choice-title">Femeie</strong>
+                <span className="choice-desc">Formula BMR adaptată</span>
               </button>
+            </div>
+          </div>
+
+          <div className="section-group">
+            <span className="field-label">Obiectivul principal:</span>
+            <div className="stack-options">
+              {[
+                { id: 'cut', label: 'Slăbire / Deficit Caloric', desc: '-400 kcal deficit moderat & ardere grăsimi', delta: '-400 kcal' },
+                { id: 'maintain', label: 'Menținere & Tonifiere', desc: 'Echilibru energetic perfect și energie stabilă', delta: '0 kcal' },
+                { id: 'bulk', label: 'Creștere Masă Musculară', desc: '+350 kcal surplus curat pentru hipertrofie', delta: '+350 kcal' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`option-row ${goal === item.id ? 'selected' : ''}`}
+                  onClick={() => setGoal(item.id as Goal)}
+                >
+                  <div className="option-text">
+                    <div className="title-with-pill">
+                      <strong className="option-title">{item.label}</strong>
+                      <span className="delta-pill tabular-num">{item.delta}</span>
+                    </div>
+                    <span className="option-desc">{item.desc}</span>
+                  </div>
+                  {goal === item.id && <Check size={18} className="check-icon" />}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Step 2: Biometrice */}
+      {/* Step 2: Biometrics */}
       {step === 2 && (
-        <div className="step-content animate-fade-in">
-          <h2 className="step-title">Datele tale biometrice</h2>
-          <p className="step-subtitle">Necesar pentru calculul exact al ratei metabolice bazale (BMR).</p>
+        <div className="step-content animate-slide-up">
+          <div className="step-header">
+            <h2 className="step-title">Datele tale biometrice</h2>
+            <p className="step-desc">Utilizăm ecuația standard Mifflin-St Jeor pentru acuratețe maximă.</p>
+          </div>
 
           <div className="metrics-grid">
             <div className="metric-box">
-              <span className="metric-label">Vârstă</span>
+              <label className="metric-label">Vârstă</label>
               <div className="metric-input-wrap">
                 <input
                   type="number"
                   min="14"
-                  max="90"
+                  max="100"
                   value={age}
                   onChange={(e) => setAge(Number(e.target.value))}
                   className="metric-input"
@@ -139,27 +168,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             </div>
 
             <div className="metric-box">
-              <span className="metric-label">Înălțime</span>
-              <div className="metric-input-wrap">
-                <input
-                  type="number"
-                  min="130"
-                  max="220"
-                  value={heightCm}
-                  onChange={(e) => setHeightCm(Number(e.target.value))}
-                  className="metric-input"
-                />
-                <span className="metric-unit">cm</span>
-              </div>
-            </div>
-
-            <div className="metric-box">
-              <span className="metric-label">Greutate</span>
+              <label className="metric-label">Greutate actuală</label>
               <div className="metric-input-wrap">
                 <input
                   type="number"
                   min="35"
-                  max="200"
+                  max="250"
+                  step="0.5"
                   value={weightKg}
                   onChange={(e) => setWeightKg(Number(e.target.value))}
                   className="metric-input"
@@ -167,274 +182,256 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <span className="metric-unit">kg</span>
               </div>
             </div>
+
+            <div className="metric-box">
+              <label className="metric-label">Înălțime</label>
+              <div className="metric-input-wrap">
+                <input
+                  type="number"
+                  min="120"
+                  max="230"
+                  value={heightCm}
+                  onChange={(e) => setHeightCm(Number(e.target.value))}
+                  className="metric-input"
+                />
+                <span className="metric-unit">cm</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Step 3: Activitate & Obiectiv */}
+      {/* Step 3: Activity Level */}
       {step === 3 && (
-        <div className="step-content animate-fade-in">
-          <h2 className="step-title">Nivel de activitate & Obiectiv</h2>
-          <p className="step-subtitle">Cât de des te antrenezi și ce vrei să obții?</p>
-
-          <label className="input-label">Nivel de activitate zilnică</label>
-          <div className="stack-options">
-            {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                className={`option-row ${activityLevel === key ? 'selected' : ''}`}
-                onClick={() => setActivityLevel(key)}
-              >
-                <div className="option-text">
-                  <span className="option-title">{ACTIVITY_LABELS[key].title}</span>
-                  <span className="option-desc">{ACTIVITY_LABELS[key].desc}</span>
-                </div>
-                {activityLevel === key && <Check size={18} className="check-icon" />}
-              </button>
-            ))}
+        <div className="step-content animate-slide-up">
+          <div className="step-header">
+            <h2 className="step-title">Nivelul de activitate fizică</h2>
+            <p className="step-desc">Selectează nivelul care descrie cel mai bine o săptămână obișnuită.</p>
           </div>
 
-          <label className="input-label" style={{ marginTop: '16px' }}>Obiectivul tău principal</label>
           <div className="stack-options">
-            {(Object.keys(GOAL_LABELS) as Goal[]).map((key) => (
+            {[
+              { id: 'sedentary', label: 'Sedentar', desc: 'Muncă la birou, puțin spre deloc efort fizic' },
+              { id: 'light', label: 'Ușor Activ', desc: 'Plimbări zilnice sau 1-2 antrenamente / săptămână' },
+              { id: 'moderate', label: 'Moderat Activ', desc: '3-4 antrenamente pe săptămână (recomandat)' },
+              { id: 'very_active', label: 'Foarte Activ', desc: '5-7 antrenamente intense sau muncă fizică grea' },
+            ].map((item) => (
               <button
-                key={key}
+                key={item.id}
                 type="button"
-                className={`option-row ${goal === key ? 'selected' : ''}`}
-                onClick={() => setGoal(key)}
+                className={`option-row ${activityLevel === item.id ? 'selected' : ''}`}
+                onClick={() => setActivityLevel(item.id as ActivityLevel)}
               >
                 <div className="option-text">
-                  <div className="title-with-pill">
-                    <span className="option-title">{GOAL_LABELS[key].title}</span>
-                    <span className="delta-pill">{GOAL_LABELS[key].delta}</span>
-                  </div>
-                  <span className="option-desc">{GOAL_LABELS[key].desc}</span>
+                  <strong className="option-title">{item.label}</strong>
+                  <span className="option-desc">{item.desc}</span>
                 </div>
-                {goal === key && <Check size={18} className="check-icon" />}
+                {activityLevel === item.id && <Check size={18} className="check-icon" />}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Step 4: Echipamente Bucătărie */}
+      {/* Step 4: Dietary Preferences & Appliances */}
       {step === 4 && (
-        <div className="step-content animate-fade-in">
-          <h2 className="step-title">Ce ai în bucătărie?</h2>
-          <p className="step-subtitle">AI-ul va genera rețete adaptate doar aparatelor pe care le deții.</p>
+        <div className="step-content animate-slide-up">
+          <div className="step-header">
+            <h2 className="step-title">Preferințe & Aparatură</h2>
+            <p className="step-desc">AI-ul va propune rețete compatibile cu aparatele tale de gătit.</p>
+          </div>
 
-          <div className="stack-options">
-            {DEFAULT_APPLIANCES.map((app) => {
-              const isSelected = selectedAppliances.includes(app.name);
-              return (
-                <button
-                  key={app.id}
-                  type="button"
-                  className={`option-row ${isSelected ? 'selected' : ''}`}
-                  onClick={() => toggleAppliance(app.name)}
-                >
-                  <div className="option-text">
+          <div className="section-group">
+            <span className="field-label">Stil alimentar / restricții:</span>
+            <div className="stack-options">
+              {['High Protein', 'Omnivor echilibrat', 'Vegetarian', 'Vegan', 'Fără Lactoză', 'Keto / Low Carb'].map((diet) => {
+                const isSel = dietaryRestrictions.includes(diet);
+                return (
+                  <button
+                    key={diet}
+                    type="button"
+                    className={`option-row ${isSel ? 'selected' : ''}`}
+                    onClick={() => toggleDiet(diet)}
+                  >
+                    <span className="option-title">{diet}</span>
+                    <div className={`checkbox-custom ${isSel ? 'checked' : ''}`}>
+                      {isSel && <Check size={14} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="section-group">
+            <span className="field-label">Aparatură disponibilă în bucătărie:</span>
+            <div className="stack-options">
+              {DEFAULT_APPLIANCES.map((app) => {
+                const isSel = appliances.includes(app.name);
+                return (
+                  <button
+                    key={app.id}
+                    type="button"
+                    className={`option-row ${isSel ? 'selected' : ''}`}
+                    onClick={() => toggleAppliance(app.name)}
+                  >
                     <span className="option-title">{app.name}</span>
-                  </div>
-                  <div className={`checkbox-custom ${isSelected ? 'checked' : ''}`}>
-                    {isSelected && <Check size={14} />}
-                  </div>
-                </button>
-              );
-            })}
+                    <div className={`checkbox-custom ${isSel ? 'checked' : ''}`}>
+                      {isSel && <Check size={14} />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Step 5: Rezumat Metabolic & Confirmare */}
+      {/* Step 5: Final Target Review */}
       {step === 5 && (
-        <div className="step-content animate-fade-in">
+        <div className="step-content animate-slide-up">
+          <div className="step-header">
+            <h2 className="step-title">Planul tău metabolic este gata!</h2>
+            <p className="step-desc">Iată țintele zilnice calculate pe baza profilului tău.</p>
+          </div>
+
           <div className="target-card">
             <div className="target-header">
-              <Flame size={22} className="flame-icon" />
+              <Flame size={28} className="flame-icon" />
               <div>
-                <span className="target-badge">Profil Metabolic Calculat</span>
-                <h3 className="target-calories tabular-num">{targets.targetCalories} <span className="kcal-unit">kcal/zi</span></h3>
+                <span className="target-badge">Ținta Zilnică de Calorii</span>
+                <span className="target-calories tabular-num">{metabolicPlan.targetCalories} <span className="kcal-unit">kcal/zi</span></span>
               </div>
             </div>
 
             <div className="target-stats-grid">
               <div className="stat-pill stat-protein">
                 <span className="stat-name">Proteine</span>
-                <strong className="stat-val tabular-num">{targets.proteinGrams}g</strong>
+                <strong className="stat-val tabular-num">{metabolicPlan.proteinGrams}g</strong>
               </div>
               <div className="stat-pill stat-carbs">
                 <span className="stat-name">Carbohidrați</span>
-                <strong className="stat-val tabular-num">{targets.carbsGrams}g</strong>
+                <strong className="stat-val tabular-num">{metabolicPlan.carbsGrams}g</strong>
               </div>
               <div className="stat-pill stat-fat">
                 <span className="stat-name">Grăsimi</span>
-                <strong className="stat-val tabular-num">{targets.fatGrams}g</strong>
+                <strong className="stat-val tabular-num">{metabolicPlan.fatGrams}g</strong>
               </div>
             </div>
 
             <div className="target-meta">
-              <span>BMR: {targets.bmr} kcal</span>
+              <span>BMR: {metabolicPlan.bmr} kcal</span>
               <span>•</span>
-              <span>TDEE: {targets.tdee} kcal</span>
-              <span>•</span>
-              <span>Țintă: {GOAL_LABELS[goal].title}</span>
+              <span>TDEE: {metabolicPlan.tdee} kcal</span>
             </div>
           </div>
 
           <div className="summary-bullets">
             <div className="bullet-item">
-              <ShieldCheck size={18} className="bullet-icon" />
-              <span>Calcul adaptat pentru <strong>{name}</strong> ({weightKg} kg, {heightCm} cm).</span>
+              <ShieldCheck size={16} className="bullet-icon" />
+              <span>Swipe Deck va injecta automat macro-urile rămase în fiecare propunere AI.</span>
             </div>
             <div className="bullet-item">
-              <Sparkles size={18} className="bullet-icon" />
-              <span>The Swipe Machine va genera mese optimizate pentru <strong>Airfryer & plită</strong>.</span>
+              <Zap size={16} className="bullet-icon" />
+              <span>NVIDIA NIM va genera pachete de rețete optimizate pe timpul și bugetul tău.</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Action Navigation Footer */}
+      {/* Action Footer */}
       <div className="onboarding-actions">
         {step > 1 && (
-          <button
-            type="button"
-            className="btn-back"
-            onClick={() => setStep(step - 1)}
-          >
-            <ArrowLeft size={18} />
+          <button type="button" className="btn-back" onClick={() => setStep((s) => s - 1)}>
+            <ArrowLeft size={16} />
             <span>Înapoi</span>
           </button>
         )}
 
-        {step < totalSteps ? (
-          <button
-            type="button"
-            className="btn-next"
-            onClick={() => setStep(step + 1)}
-          >
+        {step < 5 ? (
+          <button type="button" className="btn-next" onClick={() => setStep((s) => s + 1)}>
             <span>Continuă</span>
-            <ArrowRight size={18} />
+            <ArrowRight size={16} />
           </button>
         ) : (
-          <button
-            type="button"
-            className="btn-finish"
-            onClick={handleFinish}
-          >
+          <button type="button" className="btn-finish" onClick={handleFinish}>
             <Sparkles size={18} />
-            <span>Activează NutriAI</span>
+            <span>Lansează NutriAI Dashboard</span>
           </button>
         )}
       </div>
 
       <style jsx>{`
-        .onboarding-wrapper {
+        .onboarding-card {
+          padding: 8px 4px;
           display: flex;
           flex-direction: column;
-          min-height: 100vh;
-          padding: 24px 18px;
-          background: radial-gradient(circle at 50% 0%, #172138 0%, var(--bg-surface) 75%);
+          gap: 20px;
         }
 
-        .onboarding-header {
-          margin-bottom: 24px;
-        }
-
-        .brand-badge {
-          display: inline-flex;
+        .step-tracker {
+          display: flex;
           align-items: center;
           gap: 6px;
-          padding: 4px 12px;
-          background: rgba(99, 102, 241, 0.12);
-          border: 1px solid rgba(99, 102, 241, 0.25);
-          border-radius: var(--radius-full);
-          color: #a5b4fc;
-          font-size: 0.75rem;
-          font-weight: 700;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-          margin-bottom: 12px;
+          padding: 4px 0;
         }
 
-        :global(.brand-icon) {
-          color: #818cf8;
-        }
-
-        .step-bar-wrap {
+        .step-bar {
+          flex: 1;
           height: 4px;
-          background: rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-full);
-          overflow: hidden;
-          margin-bottom: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          transition: background var(--duration-fast);
         }
 
-        .step-bar-fill {
-          height: 100%;
-          background: linear-gradient(90deg, var(--accent-primary) 0%, var(--macro-calories) 100%);
-          transition: width var(--duration-normal) var(--ease-out-smooth);
-        }
-
-        .step-counter {
-          font-size: 0.75rem;
-          color: var(--text-tertiary);
-          font-weight: 600;
+        .step-bar.active {
+          background: var(--accent-primary);
         }
 
         .step-content {
-          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .step-header {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
         }
 
         .step-title {
-          font-size: 1.5rem;
+          font-size: 1.35rem;
           font-weight: 800;
           color: var(--text-primary);
-          letter-spacing: -0.02em;
-          margin-bottom: 6px;
+          letter-spacing: -0.01em;
+          line-height: 1.25;
         }
 
-        .step-subtitle {
-          font-size: 0.88rem;
+        .step-desc {
+          font-size: 0.82rem;
           color: var(--text-secondary);
           line-height: 1.4;
-          margin-bottom: 22px;
         }
 
-        .form-group {
-          margin-bottom: 18px;
+        .section-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
-        .input-label {
-          display: block;
-          font-size: 0.8rem;
-          font-weight: 700;
+        .field-label {
+          font-size: 0.76rem;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.04em;
-          color: var(--text-secondary);
-          margin-bottom: 8px;
-        }
-
-        .text-input {
-          width: 100%;
-          padding: 14px 16px;
-          background: var(--bg-card);
-          border: 1px solid var(--border-medium);
-          border-radius: var(--radius-md);
-          font-size: 1rem;
-          color: var(--text-primary);
-          transition: border-color var(--duration-fast);
-        }
-
-        .text-input:focus {
-          border-color: var(--accent-primary);
+          color: var(--text-tertiary);
         }
 
         .grid-2 {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
+          gap: 10px;
         }
 
         .choice-card {
@@ -456,11 +453,24 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
         }
 
+        .choice-icon-wrap {
+          width: 32px;
+          height: 32px;
+          border-radius: var(--radius-sm);
+          background: rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 10px;
+          color: var(--accent-primary);
+        }
+
         .choice-title {
-          font-size: 1rem;
-          font-weight: 700;
+          display: block;
+          font-size: 0.96rem;
+          font-weight: 800;
           color: var(--text-primary);
-          margin-bottom: 4px;
+          margin-bottom: 2px;
         }
 
         .choice-desc {
@@ -486,7 +496,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .metric-label {
-          font-size: 0.95rem;
+          font-size: 0.92rem;
           font-weight: 700;
           color: var(--text-primary);
         }
@@ -510,7 +520,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .metric-unit {
-          font-size: 0.85rem;
+          font-size: 0.82rem;
           font-weight: 600;
           color: var(--text-tertiary);
           width: 26px;
@@ -552,7 +562,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .option-title {
-          font-size: 0.95rem;
+          font-size: 0.92rem;
           font-weight: 700;
           color: var(--text-primary);
         }
@@ -568,7 +578,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .option-desc {
-          font-size: 0.76rem;
+          font-size: 0.74rem;
           color: var(--text-tertiary);
         }
 
@@ -577,8 +587,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .checkbox-custom {
-          width: 22px;
-          height: 22px;
+          width: 20px;
+          height: 20px;
           border-radius: 6px;
           border: 1px solid var(--border-bright);
           display: flex;
@@ -593,12 +603,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .target-card {
-          background: linear-gradient(145deg, #18243e 0%, #111a2e 100%);
+          background: linear-gradient(155deg, #18243e 0%, #10182c 100%);
           border: 1px solid rgba(99, 102, 241, 0.3);
           border-radius: var(--radius-lg);
-          padding: 20px;
-          margin-bottom: 18px;
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+          padding: 18px;
+          margin-bottom: 14px;
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
         }
 
         .target-header {
@@ -614,22 +624,22 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
         .target-badge {
           display: block;
-          font-size: 0.72rem;
-          font-weight: 700;
+          font-size: 0.7rem;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.04em;
           color: var(--text-tertiary);
         }
 
         .target-calories {
-          font-size: 2rem;
-          font-weight: 800;
+          font-size: 1.9rem;
+          font-weight: 900;
           color: var(--text-primary);
           line-height: 1;
         }
 
         .kcal-unit {
-          font-size: 0.95rem;
+          font-size: 0.9rem;
           font-weight: 600;
           color: var(--text-secondary);
         }
@@ -638,12 +648,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
           gap: 8px;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         .stat-pill {
-          padding: 10px 8px;
-          border-radius: var(--radius-md);
+          padding: 8px 6px;
+          border-radius: var(--radius-sm);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -651,14 +661,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         }
 
         .stat-name {
-          font-size: 0.7rem;
-          font-weight: 700;
+          font-size: 0.68rem;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
 
         .stat-val {
-          font-size: 1.15rem;
+          font-size: 1.1rem;
           font-weight: 800;
         }
 
@@ -685,7 +695,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           color: var(--text-tertiary);
           border-top: 1px solid var(--border-subtle);
           padding-top: 10px;
@@ -694,17 +704,17 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         .summary-bullets {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
         .bullet-item {
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: 0.84rem;
+          font-size: 0.82rem;
           color: var(--text-secondary);
           background: var(--bg-card);
-          padding: 12px 14px;
+          padding: 10px 12px;
           border-radius: var(--radius-md);
           border: 1px solid var(--border-subtle);
         }
@@ -718,7 +728,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding-top: 16px;
+          padding-top: 14px;
           border-top: 1px solid var(--border-subtle);
         }
 
@@ -726,12 +736,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 14px 18px;
+          padding: 12px 16px;
           background: var(--bg-card);
           color: var(--text-secondary);
           border: 1px solid var(--border-medium);
           border-radius: var(--radius-md);
-          font-size: 0.9rem;
+          font-size: 0.86rem;
           font-weight: 700;
         }
 
@@ -741,19 +751,18 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 14px 20px;
+          padding: 13px 18px;
           background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
           color: #ffffff;
           border-radius: var(--radius-md);
-          font-size: 0.95rem;
-          font-weight: 700;
+          font-size: 0.92rem;
+          font-weight: 800;
           box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
-          transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+          transition: transform var(--duration-fast);
         }
 
         .btn-next:hover, .btn-finish:hover {
           transform: translateY(-1px);
-          box-shadow: 0 6px 22px rgba(99, 102, 241, 0.55);
         }
       `}</style>
     </div>

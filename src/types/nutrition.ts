@@ -1,4 +1,4 @@
-export type Gender = 'male' | 'female';
+﻿export type Gender = 'male' | 'female';
 export type Goal = 'cut' | 'maintain' | 'bulk';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very_active';
 
@@ -34,7 +34,7 @@ export interface MealCardProposal {
   fat: number;
   prepTimeMinutes: number;
   cookTimeMinutes: number;
-  difficulty: 'Ușor' | 'Mediu' | 'Avansat';
+  difficulty: 'Ușor' | 'Mediu' | 'Avansat' | string;
   servings: number;
   appliancesUsed: string[];
   estimatedCostRon?: number;

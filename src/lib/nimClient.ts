@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+﻿import OpenAI from 'openai';
 import { PreSwipeContext, MealCardProposal } from '@/types/nutrition';
 import { MealCardDeckSchema, QuickLogOutputSchema, QuickLogOutput } from './schemas';
 import { filterOrGenerateRecipes } from './mockRecipes';
@@ -33,7 +33,7 @@ You MUST respond strictly in valid JSON adhering to this exact schema:
   "recipes": [
     {
       "id": "unique-recipe-id",
-      "title": "Clear Appetizing Recipe Title",
+      "title": "Clear Appetizing Recipe Title in Romanian",
       "mode": "${context.mode}",
       "calories": 550,
       "protein": 45,
@@ -43,13 +43,13 @@ You MUST respond strictly in valid JSON adhering to this exact schema:
       "cookTimeMinutes": 15,
       "difficulty": "Ușor",
       "servings": ${context.servings},
-      "appliancesUsed": ["Airfryer / Friteuză cu aer cald"],
+      "appliancesUsed": ["Airfryer"],
       "estimatedCostRon": 18,
-      "matchReason": "Why this meal is ideal for the current macro budget and available ingredients",
+      "matchReason": "Why this meal is ideal for the current macro budget and available ingredients in Romanian",
       "tags": ["High Protein", "Airfryer", "Quick"],
       "ingredients": [
         {
-          "name": "Chicken Breast",
+          "name": "Piept de pui",
           "amount": "180g",
           "isPantryStock": true,
           "toBuy": false,
@@ -57,8 +57,8 @@ You MUST respond strictly in valid JSON adhering to this exact schema:
         }
       ],
       "instructions": [
-        "Step 1...",
-        "Step 2..."
+        "Pasul 1...",
+        "Pasul 2..."
       ]
     }
   ]
@@ -80,7 +80,7 @@ You MUST respond strictly in valid JSON adhering to this exact schema:
 - Available in fridge: ${context.fridgeIngredients.length > 0 ? context.fridgeIngredients.join(', ') : 'None (empty fridge)'}
 - Remaining Macros Today: ~${context.remainingCalories} kcal, ~${context.remainingProtein}g Protein, ~${context.remainingCarbs}g Carbs, ~${context.remainingFat}g Fat.
 
-Generate 3-4 diverse, delicious and realistic meal options adhering strictly to these constraints.`;
+Generate 3-4 diverse, delicious and realistic meal options in Romanian adhering strictly to these constraints.`;
 
   try {
     const completion = await client.chat.completions.create({
@@ -132,7 +132,7 @@ export async function parseQuickAILog(textDescription: string): Promise<QuickLog
   const systemPrompt = `You are a nutrition analyst. Given a natural language description of food/drink consumed, extract estimated nutritional values.
 Respond strictly in valid JSON:
 {
-  "title": "Short Clean Meal Name (e.g. 2 Ouă Ochiuri cu Pâine)",
+  "title": "Short Clean Meal Name in Romanian (e.g. 2 Ouă Ochiuri cu Pâine Prăjită)",
   "calories": 350,
   "protein": 24,
   "carbs": 30,

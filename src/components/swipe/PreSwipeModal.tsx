@@ -1,91 +1,92 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
-import { SwipeMode, MealCategory, PreSwipeContext } from '@/types/nutrition';
-import { POPULAR_FRIDGE_ITEMS, DEFAULT_APPLIANCES } from '@/lib/metabolic';
-import { Sparkles, Refrigerator, ShoppingCart, Utensils, X, Plus, Check } from 'lucide-react';
+import { MealCategory, PreSwipeContext, SwipeMode } from '@/types/nutrition';
+import { X, Sparkles, Plus, Check, Refrigerator, ShoppingCart, Utensils, Flame, Zap, Waves, CookingPot } from 'lucide-react';
 
 interface PreSwipeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLaunchSwipe: (context: PreSwipeContext) => void;
-  defaultCategory?: MealCategory;
+  onLaunch: (context: PreSwipeContext) => void;
   remainingCalories: number;
   remainingProtein: number;
   remainingCarbs: number;
   remainingFat: number;
-  userAppliances: string[];
+  currentCategory: MealCategory;
 }
+
+const COMMON_PANTRY = [
+  'Ouă', 'Piept de pui', 'Orez basmati', 'Lipii integrale',
+  'Spanac', 'Telemea', 'Ovăz', 'Conserve de ton',
+  'Broccoli', 'Iaurt grecesc', 'Paste', 'Ulei de măsline',
+];
+
+const APPLIANCES_LIST = [
+  { name: 'Airfryer', icon: Zap },
+  { name: 'Aragaz / Tigaie', icon: Flame },
+  { name: 'Cuptor', icon: CookingPot },
+  { name: 'Blender', icon: Waves },
+  { name: 'Microunde', icon: Zap },
+];
 
 export function PreSwipeModal({
   isOpen,
   onClose,
-  onLaunchSwipe,
-  defaultCategory = 'lunch',
+  onLaunch,
   remainingCalories,
   remainingProtein,
   remainingCarbs,
   remainingFat,
-  userAppliances,
+  currentCategory,
 }: PreSwipeModalProps) {
   const [mode, setMode] = useState<SwipeMode>('fridge');
-  const [mealCategory, setMealCategory] = useState<MealCategory>(defaultCategory);
-  const [servings, setServings] = useState(1);
-  const [groceryIsEmptyFridge, setGroceryIsEmptyFridge] = useState(false);
-  const [maxBudgetRon, setMaxBudgetRon] = useState(30);
-  const [selectedFridgeItems, setSelectedFridgeItems] = useState<string[]>([
-    'Ouă',
-    'Piept de pui',
-    'Spanac proaspăt',
-    'Brânză telemea / Feta',
-    'Lipii integrale',
+  const [mealCategory, setMealCategory] = useState<MealCategory>(currentCategory);
+  const [fridgeIngredients, setFridgeIngredients] = useState<string[]>([
+    'Ouă', 'Piept de pui', 'Spanac', 'Telemea', 'Lipii integrale'
   ]);
-  const [customItemInput, setCustomItemInput] = useState('');
-  const [selectedAppliances, setSelectedAppliances] = useState<string[]>(userAppliances);
+  const [appliances, setAppliances] = useState<string[]>(['Airfryer', 'Aragaz / Tigaie']);
+  const [servings, setServings] = useState<number>(1);
+  const [groceryFork, setGroceryFork] = useState<'empty' | 'stock'>('empty');
+  const [maxBudgetRon, setMaxBudgetRon] = useState<number>(30);
+  const [customItem, setCustomItem] = useState('');
 
   if (!isOpen) return null;
 
-  const handleAddCustomItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customItemInput.trim()) {
-      if (!selectedFridgeItems.includes(customItemInput.trim())) {
-        setSelectedFridgeItems([...selectedFridgeItems, customItemInput.trim()]);
-      }
-      setCustomItemInput('');
-    }
+  const toggleIngredient = (item: string) => {
+    setFridgeIngredients((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    );
   };
 
-  const toggleFridgeItem = (item: string) => {
-    if (selectedFridgeItems.includes(item)) {
-      setSelectedFridgeItems(selectedFridgeItems.filter((i) => i !== item));
-    } else {
-      setSelectedFridgeItems([...selectedFridgeItems, item]);
+  const addCustomIngredient = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customItem.trim() && !fridgeIngredients.includes(customItem.trim())) {
+      setFridgeIngredients((prev) => [...prev, customItem.trim()]);
+      setCustomItem('');
     }
   };
 
   const toggleAppliance = (app: string) => {
-    if (selectedAppliances.includes(app)) {
-      setSelectedAppliances(selectedAppliances.filter((a) => a !== app));
-    } else {
-      setSelectedAppliances([...selectedAppliances, app]);
-    }
+    setAppliances((prev) =>
+      prev.includes(app) ? prev.filter((a) => a !== app) : [...prev, app]
+    );
   };
 
-  const handleStart = () => {
-    const resolvedMode: SwipeMode =
-      mode === 'grocery_empty' || (mode === 'grocery_stock' && groceryIsEmptyFridge)
-        ? 'grocery_empty'
-        : mode === 'grocery_stock' && !groceryIsEmptyFridge
-        ? 'grocery_stock'
+  const handleStartSwipe = () => {
+    const finalMode =
+      mode === 'grocery_empty' || mode === 'grocery_stock'
+        ? groceryFork === 'empty'
+          ? 'grocery_empty'
+          : 'grocery_stock'
         : mode;
 
-    onLaunchSwipe({
-      mode: resolvedMode,
+    onLaunch({
+      mode: finalMode,
       mealCategory,
+      fridgeIngredients: finalMode === 'grocery_empty' ? [] : fridgeIngredients,
+      appliances,
       servings,
-      appliances: selectedAppliances,
-      fridgeIngredients: resolvedMode === 'grocery_empty' || resolvedMode === 'restaurant' ? [] : selectedFridgeItems,
-      maxBudgetRon: mode.includes('grocery') ? maxBudgetRon : undefined,
+      maxBudgetRon: finalMode.startsWith('grocery') ? maxBudgetRon : undefined,
       remainingCalories,
       remainingProtein,
       remainingCarbs,
@@ -94,135 +95,132 @@ export function PreSwipeModal({
   };
 
   return (
-    <div className="modal-overlay animate-fade-in" onClick={onClose}>
+    <div className="modal-backdrop animate-fade-in" onClick={onClose}>
       <div className="modal-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        {/* Drag Handle Bar */}
         <div className="sheet-drag-handle" />
 
+        {/* Header */}
         <div className="modal-header">
-          <div className="header-title-wrap">
-            <Sparkles size={18} className="sparkle-icon" />
-            <h3 className="modal-title">Configurează The Swipe Machine</h3>
+          <div className="header-titles">
+            <h3 className="modal-title">Filtrează Swipe Deck</h3>
+            <span className="modal-sub">
+              Macro-uri țintă rămase: <strong className="tabular-num text-amber">{remainingCalories} kcal</strong> | <strong className="tabular-num text-emerald">{remainingProtein}g P</strong>
+            </span>
           </div>
-          <button type="button" className="btn-close" onClick={onClose}>
+          <button type="button" className="btn-close" onClick={onClose} aria-label="Închide">
             <X size={18} />
           </button>
         </div>
 
-        {/* Dynamic Context Banner */}
-        <div className="macro-context-banner">
-          <span className="banner-label">CONTEXT NUTRITIONAL RĂMAS:</span>
-          <div className="banner-badges tabular-num">
-            <span className="badge badge-calories">{remainingCalories} kcal</span>
-            <span className="badge badge-protein">{remainingProtein}g P</span>
-            <span className="badge badge-carbs">{remainingCarbs}g C</span>
-            <span className="badge badge-fat">{remainingFat}g F</span>
-          </div>
-        </div>
-
-        <div className="modal-body">
+        {/* Scrollable Form Body */}
+        <div className="modal-body-scroll">
           {/* Category Selector */}
           <div className="config-section">
-            <label className="section-label">Pentru ce masă glisezi?</label>
+            <span className="section-label">Pentru ce masă?</span>
             <div className="category-chips-grid">
-              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealCategory[]).map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  className={`chip-button ${mealCategory === cat ? 'selected' : ''}`}
-                  onClick={() => setMealCategory(cat)}
-                >
-                  {cat === 'breakfast' && 'Mic Dejun'}
-                  {cat === 'lunch' && 'Prânz'}
-                  {cat === 'dinner' && 'Cină'}
-                  {cat === 'snack' && 'Gustare'}
-                </button>
-              ))}
+              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealCategory[]).map((cat) => {
+                const labels: Record<MealCategory, string> = {
+                  breakfast: 'Mic Dejun',
+                  lunch: 'Prânz',
+                  dinner: 'Cină',
+                  snack: 'Gustare',
+                };
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setMealCategory(cat)}
+                    className={`chip-button ${mealCategory === cat ? 'selected' : ''}`}
+                  >
+                    {labels[cat]}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Mode Selector */}
           <div className="config-section">
-            <label className="section-label">Alege modul de căutare</label>
+            <span className="section-label">Cum pregătești masa?</span>
             <div className="modes-stack">
-              {/* Option 1: Fridge */}
               <button
                 type="button"
                 className={`mode-card ${mode === 'fridge' ? 'selected' : ''}`}
                 onClick={() => setMode('fridge')}
               >
                 <div className="mode-icon-wrap icon-fridge">
-                  <Refrigerator size={20} />
+                  <Refrigerator size={18} />
                 </div>
                 <div className="mode-content">
-                  <span className="mode-title">Gătesc acasă (Ce am în frigider)</span>
-                  <span className="mode-sub">Rețete fără cumpărături din stocul tău curent</span>
+                  <strong className="mode-title">Gătesc acasă (Ce am în frigider)</strong>
+                  <span className="mode-sub">AI folosește strict ingredientele din stoc</span>
                 </div>
               </button>
 
-              {/* Option 2: Smart Grocery */}
               <button
                 type="button"
-                className={`mode-card ${mode.includes('grocery') ? 'selected' : ''}`}
-                onClick={() => setMode('grocery_stock')}
+                className={`mode-card ${mode.startsWith('grocery') ? 'selected' : ''}`}
+                onClick={() => setMode('grocery_empty')}
               >
                 <div className="mode-icon-wrap icon-grocery">
-                  <ShoppingCart size={20} />
+                  <ShoppingCart size={18} />
                 </div>
                 <div className="mode-content">
-                  <span className="mode-title">Cumpărături Inteligente & Buget</span>
-                  <span className="mode-sub">Optimizare cost & ingrediente minime</span>
+                  <strong className="mode-title">Cumpărături inteligente cu buget</strong>
+                  <span className="mode-sub">Frigider gol sau stoc + buget suplimentar</span>
                 </div>
               </button>
 
-              {/* Option 3: Restaurant */}
               <button
                 type="button"
                 className={`mode-card ${mode === 'restaurant' ? 'selected' : ''}`}
                 onClick={() => setMode('restaurant')}
               >
                 <div className="mode-icon-wrap icon-restaurant">
-                  <Utensils size={20} />
+                  <Utensils size={18} />
                 </div>
                 <div className="mode-content">
-                  <span className="mode-title">Mănânc în oraș / Restaurant</span>
-                  <span className="mode-sub">Ghid de comenzi la restaurant pe macro-uri</span>
+                  <strong className="mode-title">Mănânc în oraș</strong>
+                  <span className="mode-sub">Ghid optimizat pentru restaurante / bistrou</span>
                 </div>
               </button>
             </div>
           </div>
 
-          {/* Grocery Specific Bifurcation & Budget */}
-          {mode.includes('grocery') && (
-            <div className="config-section grocery-bifurcation animate-fade-in">
-              <label className="section-label">Ai deja ingrediente sau frigiderul e gol?</label>
+          {/* Grocery Fork Details */}
+          {mode.startsWith('grocery') && (
+            <div className="grocery-bifurcation animate-fade-in">
+              <span className="section-label">Starea stocului tău:</span>
               <div className="grid-2">
                 <button
                   type="button"
-                  className={`choice-btn ${groceryIsEmptyFridge ? 'selected' : ''}`}
-                  onClick={() => setGroceryIsEmptyFridge(true)}
+                  className={`choice-btn ${groceryFork === 'empty' ? 'selected' : ''}`}
+                  onClick={() => setGroceryFork('empty')}
                 >
                   <span className="choice-head">Frigider complet gol</span>
-                  <span className="choice-hint">Rețetă completă de la zero</span>
+                  <span className="choice-hint">Pleacă de la zero</span>
                 </button>
                 <button
                   type="button"
-                  className={`choice-btn ${!groceryIsEmptyFridge ? 'selected' : ''}`}
-                  onClick={() => setGroceryIsEmptyFridge(false)}
+                  className={`choice-btn ${groceryFork === 'stock' ? 'selected' : ''}`}
+                  onClick={() => setGroceryFork('stock')}
                 >
                   <span className="choice-head">Am ingrediente de bază</span>
-                  <span className="choice-hint">Completează doar ce lipsește</span>
+                  <span className="choice-hint">Rețetă hibridă</span>
                 </button>
               </div>
 
+              {/* Budget Slider */}
               <div className="budget-slider-wrap">
                 <div className="budget-header">
-                  <span className="section-label" style={{ margin: 0 }}>Plafon Buget Maxim:</span>
-                  <strong className="budget-val tabular-num">{maxBudgetRon} RON</strong>
+                  <span className="section-label">Plafon buget maxim:</span>
+                  <span className="budget-val tabular-num">{maxBudgetRon} RON</span>
                 </div>
                 <input
                   type="range"
                   min="10"
-                  max="80"
+                  max="100"
                   step="5"
                   value={maxBudgetRon}
                   onChange={(e) => setMaxBudgetRon(Number(e.target.value))}
@@ -232,17 +230,16 @@ export function PreSwipeModal({
             </div>
           )}
 
-          {/* Fridge Ingredients Selector (when mode is fridge or grocery with stock) */}
-          {(mode === 'fridge' || (mode.includes('grocery') && !groceryIsEmptyFridge)) && (
+          {/* Ingredients Picker */}
+          {(mode === 'fridge' || (mode.startsWith('grocery') && groceryFork === 'stock')) && (
             <div className="config-section animate-fade-in">
-              <label className="section-label">Ce ai în frigider/cămară?</label>
-
-              <form onSubmit={handleAddCustomItem} className="custom-item-form">
+              <span className="section-label">Ce ingrediente ai la dispoziție?</span>
+              <form onSubmit={addCustomIngredient} className="custom-item-form">
                 <input
                   type="text"
-                  value={customItemInput}
-                  onChange={(e) => setCustomItemInput(e.target.value)}
-                  placeholder="Adaugă ingredient (ex: ciuperci, avocado...)"
+                  placeholder="+ Adaugă ingredient custom..."
+                  value={customItem}
+                  onChange={(e) => setCustomItem(e.target.value)}
                   className="add-item-input"
                 />
                 <button type="submit" className="btn-add-item" aria-label="Adaugă">
@@ -251,17 +248,17 @@ export function PreSwipeModal({
               </form>
 
               <div className="fridge-chips-wrap">
-                {POPULAR_FRIDGE_ITEMS.map((item) => {
-                  const isSelected = selectedFridgeItems.includes(item);
+                {COMMON_PANTRY.map((ing) => {
+                  const isSel = fridgeIngredients.includes(ing);
                   return (
                     <button
-                      key={item}
+                      key={ing}
                       type="button"
-                      className={`fridge-chip ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleFridgeItem(item)}
+                      onClick={() => toggleIngredient(ing)}
+                      className={`fridge-chip ${isSel ? 'selected' : ''}`}
                     >
-                      {isSelected && <Check size={12} />}
-                      <span>{item}</span>
+                      {isSel && <Check size={12} />}
+                      <span>{ing}</span>
                     </button>
                   );
                 })}
@@ -269,37 +266,36 @@ export function PreSwipeModal({
             </div>
           )}
 
-          {/* Appliances Selector */}
-          {mode !== 'restaurant' && (
-            <div className="config-section">
-              <label className="section-label">Echipamente folosite</label>
-              <div className="appliances-chips">
-                {DEFAULT_APPLIANCES.map((app) => {
-                  const isSelected = selectedAppliances.includes(app.name);
-                  return (
-                    <button
-                      key={app.id}
-                      type="button"
-                      className={`app-chip ${isSelected ? 'selected' : ''}`}
-                      onClick={() => toggleAppliance(app.name)}
-                    >
-                      {isSelected && <Check size={12} />}
-                      <span>{app.name.split('/')[0]}</span>
-                    </button>
-                  );
-                })}
-              </div>
+          {/* Appliances */}
+          <div className="config-section">
+            <span className="section-label">Echipamente disponibile:</span>
+            <div className="appliances-chips">
+              {APPLIANCES_LIST.map((app) => {
+                const isSel = appliances.includes(app.name);
+                const IconComponent = app.icon;
+                return (
+                  <button
+                    key={app.name}
+                    type="button"
+                    onClick={() => toggleAppliance(app.name)}
+                    className={`app-chip ${isSel ? 'selected' : ''}`}
+                  >
+                    <IconComponent size={13} />
+                    <span>{app.name}</span>
+                  </button>
+                );
+              })}
             </div>
-          )}
+          </div>
 
           {/* Servings */}
           <div className="config-section servings-section">
-            <span className="section-label" style={{ margin: 0 }}>Număr porții:</span>
+            <span className="section-label">Număr porții:</span>
             <div className="servings-control">
               <button
                 type="button"
                 className="btn-serv"
-                onClick={() => setServings(Math.max(1, servings - 1))}
+                onClick={() => setServings((s) => Math.max(1, s - 1))}
               >
                 -
               </button>
@@ -307,7 +303,7 @@ export function PreSwipeModal({
               <button
                 type="button"
                 className="btn-serv"
-                onClick={() => setServings(Math.min(6, servings + 1))}
+                onClick={() => setServings((s) => Math.min(6, s + 1))}
               >
                 +
               </button>
@@ -315,16 +311,16 @@ export function PreSwipeModal({
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Footer CTA */}
         <div className="modal-footer">
-          <button type="button" className="btn-launch-deck" onClick={handleStart}>
+          <button type="button" className="btn-launch-deck" onClick={handleStartSwipe}>
             <Sparkles size={18} />
-            <span>Lansează The Swipe Deck</span>
+            <span>Generează & Deschide Swipe Deck</span>
           </button>
         </div>
 
         <style jsx>{`
-          .modal-overlay {
+          .modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
@@ -332,6 +328,7 @@ export function PreSwipeModal({
             bottom: 0;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 100;
             display: flex;
             align-items: flex-end;
@@ -341,93 +338,66 @@ export function PreSwipeModal({
           .modal-sheet {
             width: 100%;
             max-width: var(--mobile-max-width);
-            max-height: 85vh;
-            background: var(--bg-surface-raised);
-            border-top: 1px solid var(--border-medium);
-            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            background: var(--bg-surface);
+            border-top-left-radius: var(--radius-xl);
+            border-top-right-radius: var(--radius-xl);
+            border: 1px solid var(--border-medium);
+            border-bottom: none;
+            max-height: 88vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
-            overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
           }
 
           .sheet-drag-handle {
-            width: 40px;
+            width: 36px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.2);
             border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.2);
             margin: 10px auto 4px auto;
-            flex-shrink: 0;
           }
 
           .modal-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 18px;
+            padding: 8px 18px 12px 18px;
             border-bottom: 1px solid var(--border-subtle);
-            flex-shrink: 0;
-          }
-
-          .header-title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          :global(.sparkle-icon) {
-            color: var(--macro-calories);
           }
 
           .modal-title {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--text-primary);
+            letter-spacing: -0.01em;
           }
+
+          .modal-sub {
+            font-size: 0.74rem;
+            color: var(--text-secondary);
+          }
+
+          :global(.text-amber) { color: var(--macro-calories); }
+          :global(.text-emerald) { color: var(--macro-protein); }
 
           .btn-close {
-            color: var(--text-tertiary);
-            padding: 6px;
+            width: 32px;
+            height: 32px;
             border-radius: var(--radius-full);
-          }
-
-          .btn-close:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.05);
-          }
-
-          .macro-context-banner {
-            background: rgba(0, 0, 0, 0.35);
-            padding: 10px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            border-bottom: 1px solid var(--border-subtle);
-            flex-shrink: 0;
-          }
-
-          .banner-label {
-            font-size: 0.65rem;
-            font-weight: 800;
-            color: var(--text-tertiary);
-            letter-spacing: 0.05em;
-          }
-
-          .banner-badges {
+            background: rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
+            justify-content: center;
+            color: var(--text-secondary);
           }
 
-          .modal-body {
+          .modal-body-scroll {
             flex: 1;
-            overflow-y: auto;
             padding: 16px 18px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 18px;
-            -webkit-overflow-scrolling: touch;
           }
 
           .config-section {
@@ -437,10 +407,10 @@ export function PreSwipeModal({
           }
 
           .section-label {
-            font-size: 0.76rem;
+            font-size: 0.75rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.04em;
             color: var(--text-secondary);
           }
 
@@ -455,7 +425,7 @@ export function PreSwipeModal({
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             font-weight: 700;
             color: var(--text-secondary);
             text-align: center;
@@ -517,7 +487,7 @@ export function PreSwipeModal({
           }
 
           .mode-title {
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 700;
             color: var(--text-primary);
           }
@@ -528,7 +498,7 @@ export function PreSwipeModal({
           }
 
           .grocery-bifurcation {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.25);
             padding: 12px;
             border-radius: var(--radius-md);
             border: 1px solid var(--border-subtle);
@@ -559,13 +529,13 @@ export function PreSwipeModal({
           }
 
           .choice-head {
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 700;
             color: var(--text-primary);
           }
 
           .choice-hint {
-            font-size: 0.68rem;
+            font-size: 0.66rem;
             color: var(--text-tertiary);
           }
 
@@ -582,7 +552,7 @@ export function PreSwipeModal({
           }
 
           .budget-val {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 800;
             color: var(--macro-calories);
           }
@@ -604,7 +574,7 @@ export function PreSwipeModal({
             background: var(--bg-card);
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-sm);
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             color: var(--text-primary);
           }
 
@@ -632,7 +602,7 @@ export function PreSwipeModal({
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-full);
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             font-weight: 600;
             color: var(--text-secondary);
             transition: all var(--duration-fast);
@@ -671,7 +641,7 @@ export function PreSwipeModal({
             height: 26px;
             border-radius: var(--radius-full);
             background: rgba(255, 255, 255, 0.08);
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 800;
             color: var(--text-primary);
             display: flex;
@@ -680,7 +650,7 @@ export function PreSwipeModal({
           }
 
           .servings-num {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 800;
             color: var(--text-primary);
             width: 18px;
@@ -703,9 +673,9 @@ export function PreSwipeModal({
             gap: 8px;
             padding: 14px 20px;
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: #07090e;
+            color: #06080d;
             border-radius: var(--radius-md);
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 800;
             box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
             transition: transform var(--duration-fast);

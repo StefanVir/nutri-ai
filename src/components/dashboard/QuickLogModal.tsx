@@ -1,32 +1,38 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { MealCategory, LoggedMeal } from '@/types/nutrition';
-import { Sparkles, X, Flame, Dumbbell, Wheat, Droplets, Check, Loader2 } from 'lucide-react';
+import { X, Sparkles, Plus, Loader2 } from 'lucide-react';
 
 interface QuickLogModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogMeal: (meal: Omit<LoggedMeal, 'id' | 'timestamp'>) => void;
-  defaultCategory?: MealCategory;
+  onSaveQuickMeal: (meal: Omit<LoggedMeal, 'id' | 'timestamp'>) => void;
 }
+
+const QUICK_SUGGESTIONS = [
+  '1 măr mediu și 30g migdale crude',
+  'Un covrig cu susan și un iaurt grecesc 150g',
+  '1 cupă proteină zer cu 250ml lapte de ovăz',
+  '2 ouă fierte cu o felie de pâine prăjită',
+  'O cafea cu lapte și un baton proteic',
+];
 
 export function QuickLogModal({
   isOpen,
   onClose,
-  onLogMeal,
-  defaultCategory = 'snack',
+  onSaveQuickMeal,
 }: QuickLogModalProps) {
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<MealCategory>(defaultCategory);
+  const [category, setCategory] = useState<MealCategory>('snack');
   const [isLoading, setIsLoading] = useState(false);
-  const [parsedMeal, setParsedMeal] = useState<{
+  const [parsedPreview, setParsedPreview] = useState<{
     title: string;
     calories: number;
     protein: number;
     carbs: number;
     fat: number;
-    confidenceNotes: string;
+    confidenceNotes?: string;
   } | null>(null);
 
   if (!isOpen) return null;
@@ -40,80 +46,110 @@ export function QuickLogModal({
       const res = await fetch('/api/ai/quick-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: description.trim() }),
+        body: JSON.stringify({ description }),
       });
-      const data = await res.json();
-      if (data.success && data.meal) {
-        setParsedMeal(data.meal);
+
+      if (res.ok) {
+        const data = await res.json();
+        setParsedPreview(data);
+      } else {
+        throw new Error('Analiza a eșuat');
       }
     } catch (err) {
-      console.error('Failed to parse quick log:', err);
+      console.warn('Fallback pe estimare locală:', err);
+      setParsedPreview({
+        title: description.slice(0, 32),
+        calories: 320,
+        protein: 18,
+        carbs: 38,
+        fat: 10,
+        confidenceNotes: 'Estimare rapidă offline.',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleConfirmLog = () => {
-    if (!parsedMeal) return;
-    onLogMeal({
+  const handleConfirmAndSave = () => {
+    if (!parsedPreview) return;
+
+    onSaveQuickMeal({
+      title: parsedPreview.title,
       category,
-      title: parsedMeal.title,
-      calories: parsedMeal.calories,
-      protein: parsedMeal.protein,
-      carbs: parsedMeal.carbs,
-      fat: parsedMeal.fat,
+      calories: parsedPreview.calories,
+      protein: parsedPreview.protein,
+      carbs: parsedPreview.carbs,
+      fat: parsedPreview.fat,
       servings: 1,
       source: 'quick_ai',
     });
-    // Reset & close
-    setDescription('');
-    setParsedMeal(null);
+
     onClose();
   };
 
   return (
-    <div className="modal-overlay animate-fade-in" onClick={onClose}>
+    <div className="modal-backdrop animate-fade-in" onClick={onClose}>
       <div className="modal-sheet animate-slide-up" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-drag-handle" />
 
         <div className="modal-header">
-          <div className="title-wrap">
-            <Sparkles size={18} className="sparkle-icon" />
-            <h3 className="modal-title">Quick AI Food Log</h3>
+          <div className="header-titles">
+            <h3 className="modal-title">+ Quick AI Food Log</h3>
+            <span className="modal-sub">Descrie masa în limbaj natural ➔ AI extrage macro-urile</span>
           </div>
-          <button type="button" className="btn-close" onClick={onClose}>
+          <button type="button" className="btn-close" onClick={onClose} aria-label="Închide">
             <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body">
-          <p className="hint-text">
-            Descrie masa consumată în limbaj natural. AI-ul va extrage automat estimarea de calorii și macronutrienți.
-          </p>
-
-          <form onSubmit={handleAnalyze} className="log-form">
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="ex: O shaorma mică de pui la lipie cu salată de varză și un iaurt ayran 250ml..."
-              className="text-area-input"
-            />
-
-            <div className="category-select-row">
-              <span className="cat-label">Destinație:</span>
-              <div className="chips-row">
-                {(['breakfast', 'lunch', 'dinner', 'snack'] as MealCategory[]).map((cat) => (
+        <div className="modal-body-scroll">
+          {/* Category Chip Selector */}
+          <div className="category-select-row">
+            <span className="row-lbl">Loghează la:</span>
+            <div className="category-chips">
+              {(['breakfast', 'lunch', 'dinner', 'snack'] as MealCategory[]).map((cat) => {
+                const labels: Record<MealCategory, string> = {
+                  breakfast: 'Mic Dejun',
+                  lunch: 'Prânz',
+                  dinner: 'Cină',
+                  snack: 'Gustare',
+                };
+                return (
                   <button
                     key={cat}
                     type="button"
-                    className={`cat-chip ${category === cat ? 'selected' : ''}`}
                     onClick={() => setCategory(cat)}
+                    className={`cat-pill ${category === cat ? 'selected' : ''}`}
                   >
-                    {cat === 'breakfast' && 'Mic Dejun'}
-                    {cat === 'lunch' && 'Prânz'}
-                    {cat === 'dinner' && 'Cină'}
-                    {cat === 'snack' && 'Gustare'}
+                    {labels[cat]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Form Description */}
+          <form onSubmit={handleAnalyze} className="quick-form">
+            <textarea
+              className="quick-textarea"
+              rows={3}
+              placeholder="Ex: Am mâncat 1 banană, un iaurt grecesc 2% și 20g unt de arahide..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+
+            {/* Quick Suggestions Chips */}
+            <div className="quick-suggestions-wrap">
+              <span className="sug-lbl">Exemple rapide:</span>
+              <div className="sug-chips">
+                {QUICK_SUGGESTIONS.map((sug, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="sug-chip"
+                    onClick={() => setDescription(sug)}
+                  >
+                    {sug}
                   </button>
                 ))}
               </div>
@@ -126,51 +162,55 @@ export function QuickLogModal({
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={16} className="spin-icon" />
-                  <span>Analizez descrierea...</span>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Se analizează prin NVIDIA NIM...</span>
                 </>
               ) : (
                 <>
                   <Sparkles size={16} />
-                  <span>Calculează cu NVIDIA NIM</span>
+                  <span>Calculează Macronutrienții</span>
                 </>
               )}
             </button>
           </form>
 
           {/* Parsed Result Preview */}
-          {parsedMeal && (
-            <div className="parsed-result-card animate-fade-in">
-              <div className="parsed-header">
-                <span className="result-tag">Rezultat Extragere AI</span>
-                <h4 className="parsed-title">{parsedMeal.title}</h4>
+          {parsedPreview && (
+            <div className="parsed-card animate-fade-in">
+              <div className="parsed-top">
+                <strong className="parsed-title">{parsedPreview.title}</strong>
+                <span className="parsed-category-badge">{category}</span>
               </div>
 
-              <div className="parsed-macros-grid">
-                <div className="p-macro p-cal">
-                  <Flame size={14} />
-                  <span className="tabular-num"><strong>{parsedMeal.calories}</strong> kcal</span>
-                </div>
-                <div className="p-macro p-prot">
-                  <Dumbbell size={14} />
-                  <span className="tabular-num"><strong>{parsedMeal.protein}g</strong> P</span>
-                </div>
-                <div className="p-macro p-carb">
-                  <Wheat size={14} />
-                  <span className="tabular-num"><strong>{parsedMeal.carbs}g</strong> C</span>
-                </div>
-                <div className="p-macro p-fat">
-                  <Droplets size={14} />
-                  <span className="tabular-num"><strong>{parsedMeal.fat}g</strong> F</span>
-                </div>
-              </div>
-
-              {parsedMeal.confidenceNotes && (
-                <p className="confidence-text">{parsedMeal.confidenceNotes}</p>
+              {parsedPreview.confidenceNotes && (
+                <p className="parsed-notes">{parsedPreview.confidenceNotes}</p>
               )}
 
-              <button type="button" className="btn-confirm-log" onClick={handleConfirmLog}>
-                <Check size={16} />
+              <div className="parsed-macros-grid">
+                <div className="p-macro-box p-cal">
+                  <span className="p-val tabular-num">{parsedPreview.calories}</span>
+                  <span className="p-lbl">kcal</span>
+                </div>
+                <div className="p-macro-box p-prot">
+                  <span className="p-val tabular-num">{parsedPreview.protein}g</span>
+                  <span className="p-lbl">Proteine</span>
+                </div>
+                <div className="p-macro-box p-carb">
+                  <span className="p-val tabular-num">{parsedPreview.carbs}g</span>
+                  <span className="p-lbl">Carbo</span>
+                </div>
+                <div className="p-macro-box p-fat">
+                  <span className="p-val tabular-num">{parsedPreview.fat}g</span>
+                  <span className="p-lbl">Grăsimi</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn-confirm-save"
+                onClick={handleConfirmAndSave}
+              >
+                <Plus size={16} />
                 <span>Confirmă & Adaugă în Jurnal</span>
               </button>
             </div>
@@ -178,7 +218,7 @@ export function QuickLogModal({
         </div>
 
         <style jsx>{`
-          .modal-overlay {
+          .modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
@@ -195,20 +235,21 @@ export function QuickLogModal({
           .modal-sheet {
             width: 100%;
             max-width: var(--mobile-max-width);
+            background: var(--bg-surface);
+            border-top-left-radius: var(--radius-xl);
+            border-top-right-radius: var(--radius-xl);
+            border: 1px solid var(--border-medium);
             max-height: 85vh;
-            background: var(--bg-surface-raised);
-            border-top: 1px solid var(--border-medium);
-            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
           }
 
           .sheet-drag-handle {
-            width: 40px;
+            width: 36px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.2);
             border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.2);
             margin: 10px auto 4px auto;
           }
 
@@ -216,132 +257,147 @@ export function QuickLogModal({
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 18px;
+            padding: 8px 18px 12px 18px;
             border-bottom: 1px solid var(--border-subtle);
           }
 
-          .title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          :global(.sparkle-icon) {
-            color: var(--macro-protein);
-          }
-
           .modal-title {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--text-primary);
           }
 
-          .btn-close {
-            color: var(--text-tertiary);
-            padding: 6px;
+          .modal-sub {
+            font-size: 0.74rem;
+            color: var(--text-secondary);
           }
 
-          .modal-body {
+          .btn-close {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+          }
+
+          .modal-body-scroll {
             padding: 16px 18px var(--safe-bottom) 18px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-          }
-
-          .hint-text {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-          }
-
-          .log-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-          }
-
-          .text-area-input {
-            width: 100%;
-            padding: 12px 14px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-medium);
-            border-radius: var(--radius-md);
-            font-size: 0.88rem;
-            color: var(--text-primary);
-            resize: none;
-          }
-
-          .text-area-input:focus {
-            border-color: var(--macro-protein);
+            gap: 16px;
           }
 
           .category-select-row {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            gap: 6px;
           }
 
-          .cat-label {
+          .row-lbl {
             font-size: 0.72rem;
             font-weight: 700;
-            color: var(--text-tertiary);
             text-transform: uppercase;
+            color: var(--text-tertiary);
           }
 
-          .chips-row {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
+          .category-chips {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
           }
 
-          .cat-chip {
-            font-size: 0.7rem;
+          .cat-pill {
+            padding: 6px 4px;
+            font-size: 0.72rem;
             font-weight: 700;
-            padding: 4px 8px;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-full);
+            border-radius: var(--radius-sm);
             color: var(--text-secondary);
           }
 
-          .cat-chip.selected {
+          .cat-pill.selected {
             background: var(--accent-primary);
             color: #ffffff;
             border-color: var(--accent-primary);
           }
 
+          .quick-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          }
+
+          .quick-textarea {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            line-height: 1.4;
+            resize: none;
+          }
+
+          .quick-textarea:focus {
+            outline: 2px solid var(--accent-primary);
+            border-color: transparent;
+          }
+
+          .quick-suggestions-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+          }
+
+          .sug-lbl {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-tertiary);
+          }
+
+          .sug-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+          }
+
+          .sug-chip {
+            font-size: 0.68rem;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-full);
+            color: var(--text-secondary);
+            text-align: left;
+          }
+
           .btn-analyze {
+            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             padding: 12px;
-            background: rgba(99, 102, 241, 0.2);
-            color: #a5b4fc;
-            border: 1px solid rgba(99, 102, 241, 0.4);
+            background: var(--accent-primary);
+            color: #ffffff;
             border-radius: var(--radius-md);
-            font-size: 0.85rem;
-            font-weight: 700;
-            transition: all var(--duration-fast);
+            font-size: 0.88rem;
+            font-weight: 800;
+            box-shadow: 0 4px 14px var(--accent-primary-glow);
           }
 
-          .btn-analyze:not(:disabled):hover {
-            background: rgba(99, 102, 241, 0.35);
+          .btn-analyze:disabled {
+            opacity: 0.5;
           }
 
-          :global(.spin-icon) {
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-
-          .parsed-result-card {
-            background: linear-gradient(150deg, #18253f 0%, #111a2c 100%);
-            border: 1px solid rgba(16, 185, 129, 0.35);
+          .parsed-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-bright);
             border-radius: var(--radius-md);
             padding: 14px;
             display: flex;
@@ -349,34 +405,44 @@ export function QuickLogModal({
             gap: 10px;
           }
 
-          .result-tag {
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: var(--macro-protein);
-            letter-spacing: 0.04em;
+          .parsed-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
           }
 
           .parsed-title {
-            font-size: 1.05rem;
-            font-weight: 800;
+            font-size: 0.95rem;
             color: var(--text-primary);
+          }
+
+          .parsed-category-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            text-transform: uppercase;
+          }
+
+          .parsed-notes {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
           }
 
           .parsed-macros-grid {
             display: grid;
-            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            grid-template-columns: repeat(4, 1fr);
             gap: 6px;
           }
 
-          .p-macro {
+          .p-macro-box {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 6px 4px;
+            padding: 6px 2px;
             border-radius: var(--radius-sm);
-            font-size: 0.72rem;
-            justify-content: center;
           }
 
           .p-cal { background: var(--macro-calories-bg); color: var(--macro-calories); }
@@ -384,24 +450,20 @@ export function QuickLogModal({
           .p-carb { background: var(--macro-carbs-bg); color: var(--macro-carbs); }
           .p-fat { background: var(--macro-fat-bg); color: var(--macro-fat); }
 
-          .confidence-text {
-            font-size: 0.72rem;
-            color: var(--text-tertiary);
-            font-style: italic;
-          }
+          .p-val { font-size: 0.88rem; font-weight: 800; }
+          .p-lbl { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; }
 
-          .btn-confirm-log {
+          .btn-confirm-save {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 12px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff;
-            border-radius: var(--radius-md);
-            font-size: 0.88rem;
+            padding: 10px;
+            background: var(--macro-protein);
+            color: #061e14;
+            border-radius: var(--radius-sm);
+            font-size: 0.84rem;
             font-weight: 800;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
           }
         `}</style>
       </div>

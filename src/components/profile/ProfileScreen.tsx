@@ -1,13 +1,13 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { UserProfile, Goal } from '@/types/nutrition';
-import { GOAL_LABELS, DEFAULT_APPLIANCES } from '@/lib/metabolic';
-import { User, Settings, Flame, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { calculateMetabolicTargets, GOAL_LABELS, DEFAULT_APPLIANCES } from '@/lib/metabolic';
+import { User, Flame, Check, RotateCcw } from 'lucide-react';
 
 interface ProfileScreenProps {
   profile: UserProfile;
-  onUpdateProfile: (profile: UserProfile) => void;
+  onUpdateProfile: (updated: UserProfile) => void;
   onResetOnboarding: () => void;
 }
 
@@ -17,48 +17,56 @@ export function ProfileScreen({
   onResetOnboarding,
 }: ProfileScreenProps) {
   const handleGoalChange = (newGoal: Goal) => {
-    const delta = newGoal === 'cut' ? -400 : newGoal === 'bulk' ? 350 : 0;
-    const newCalorieTarget = profile.calorieTarget + delta;
+    const updatedDraft = { ...profile, goal: newGoal };
+    const plan = calculateMetabolicTargets(
+      updatedDraft.gender,
+      updatedDraft.age,
+      updatedDraft.heightCm,
+      updatedDraft.weightKg,
+      updatedDraft.activityLevel,
+      newGoal
+    );
 
     onUpdateProfile({
-      ...profile,
-      goal: newGoal,
-      calorieTarget: newCalorieTarget,
+      ...updatedDraft,
+      calorieTarget: plan.targetCalories,
+      proteinTarget: plan.proteinGrams,
+      carbsTarget: plan.carbsGrams,
+      fatTarget: plan.fatGrams,
     });
   };
 
-  const toggleAppliance = (applianceName: string) => {
-    const updated = profile.appliances.includes(applianceName)
-      ? profile.appliances.filter((a) => a !== applianceName)
-      : [...profile.appliances, applianceName];
-
-    onUpdateProfile({
-      ...profile,
-      appliances: updated,
-    });
+  const toggleAppliance = (appName: string) => {
+    const nextApps = profile.appliances.includes(appName)
+      ? profile.appliances.filter((a) => a !== appName)
+      : [...profile.appliances, appName];
+    onUpdateProfile({ ...profile, appliances: nextApps });
   };
 
   return (
     <div className="profile-screen animate-fade-in">
+      {/* Header Profile Card */}
       <div className="profile-hero">
         <div className="avatar-wrap">
-          <User size={28} className="avatar-icon" />
+          <User size={24} />
         </div>
         <div className="hero-text">
-          <h2 className="user-name">{profile.name}</h2>
+          <strong className="user-name">{profile.name || 'Alex'}</strong>
           <span className="user-meta">
             {profile.gender === 'male' ? 'Bărbat' : 'Femeie'} • {profile.age} ani • {profile.weightKg} kg • {profile.heightCm} cm
           </span>
         </div>
       </div>
 
-      {/* Target summary card */}
+      {/* Target Goals Card */}
       <div className="profile-target-card">
         <div className="card-top">
           <Flame size={18} className="flame-gold" />
-          <span className="target-label">ȚINTĂ METABOLICĂ ZILNICĂ</span>
+          <span className="target-label">Țintă Zilnică Actuală</span>
         </div>
-        <h3 className="target-number tabular-num">{profile.calorieTarget} <span className="unit">kcal</span></h3>
+        <div className="target-number tabular-num">
+          {profile.calorieTarget} <span className="unit">kcal</span>
+        </div>
 
         <div className="macro-pills-row">
           <div className="p-pill p-prot">
@@ -78,7 +86,7 @@ export function ProfileScreen({
 
       {/* Goal Switcher */}
       <div className="profile-section">
-        <h4 className="section-title">Obiectiv Activ</h4>
+        <h3 className="section-title">Schimbă Obiectivul Activ</h3>
         <div className="goal-switcher-grid">
           {(Object.keys(GOAL_LABELS) as Goal[]).map((key) => {
             const isSelected = profile.goal === key;
@@ -100,9 +108,9 @@ export function ProfileScreen({
         </div>
       </div>
 
-      {/* Kitchen Appliances */}
+      {/* Appliances Management */}
       <div className="profile-section">
-        <h4 className="section-title">Aparatură Bucătărie</h4>
+        <h3 className="section-title">Aparatură Bucătărie</h3>
         <div className="appliances-stack">
           {DEFAULT_APPLIANCES.map((app) => {
             const isSelected = profile.appliances.includes(app.name);
@@ -135,7 +143,7 @@ export function ProfileScreen({
         .profile-screen {
           display: flex;
           flex-direction: column;
-          gap: 18px;
+          gap: 16px;
         }
 
         .profile-hero {
@@ -149,8 +157,8 @@ export function ProfileScreen({
         }
 
         .avatar-wrap {
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
           border-radius: var(--radius-full);
           background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
           display: flex;
@@ -167,18 +175,18 @@ export function ProfileScreen({
         }
 
         .user-name {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
           font-weight: 800;
           color: var(--text-primary);
         }
 
         .user-meta {
-          font-size: 0.76rem;
+          font-size: 0.74rem;
           color: var(--text-secondary);
         }
 
         .profile-target-card {
-          background: linear-gradient(155deg, #18233b 0%, #101726 100%);
+          background: linear-gradient(155deg, #162038 0%, #0e1526 100%);
           border: 1px solid var(--border-medium);
           border-radius: var(--radius-lg);
           padding: 16px;
@@ -206,13 +214,13 @@ export function ProfileScreen({
         }
 
         .target-number {
-          font-size: 1.8rem;
+          font-size: 1.75rem;
           font-weight: 900;
           color: var(--text-primary);
         }
 
         .unit {
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           font-weight: 600;
           color: var(--text-secondary);
         }
@@ -241,11 +249,11 @@ export function ProfileScreen({
         .profile-section {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
         .section-title {
-          font-size: 0.95rem;
+          font-size: 0.92rem;
           font-weight: 800;
           color: var(--text-primary);
         }

@@ -1,139 +1,103 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  UserProfile,
-  LoggedMeal,
-  AdaptiveFavorite,
-  MealCardProposal,
-  PreSwipeContext,
-  MealCategory,
-} from '@/types/nutrition';
-import { BottomNavigation, NavTab } from '@/components/layout/BottomNavigation';
+import { UserProfile, MealCardProposal, LoggedMeal, MealCategory, PreSwipeContext } from '@/types/nutrition';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { MacroRings } from '@/components/dashboard/MacroRings';
 import { DailyJournal } from '@/components/dashboard/DailyJournal';
-import { PreSwipeModal } from '@/components/swipe/PreSwipeModal';
+import { BottomNavigation, NavTab } from '@/components/layout/BottomNavigation';
 import { SwipeDeck } from '@/components/swipe/SwipeDeck';
 import { MatchupShowdown } from '@/components/swipe/MatchupShowdown';
+import { PreSwipeModal } from '@/components/swipe/PreSwipeModal';
 import { RecipeBottomSheet } from '@/components/swipe/RecipeBottomSheet';
 import { QuickLogModal } from '@/components/dashboard/QuickLogModal';
-import { AdaptiveFavorites } from '@/components/favorites/AdaptiveFavoritesModal';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
+import { AdaptiveFavoritesModal } from '@/components/favorites/AdaptiveFavoritesModal';
 import { filterOrGenerateRecipes } from '@/lib/mockRecipes';
-import { Sparkles, Plus, Flame, Sparkle } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
-const DEFAULT_PROFILE: UserProfile = {
-  name: 'Alex',
-  gender: 'male',
-  age: 24,
-  heightCm: 180,
-  weightKg: 82,
-  activityLevel: 'moderate',
-  goal: 'cut',
-  calorieTarget: 2100,
-  proteinTarget: 165,
-  carbsTarget: 200,
-  fatTarget: 65,
-  appliances: [
-    'Airfryer / Friteuză cu aer cald',
-    'Aragaz / Plită / Tigaie',
-  ],
-  dietaryRestrictions: [],
-  hasCompletedOnboarding: false,
-};
+const LOCAL_STORAGE_KEY_PROFILE = 'nutri_ai_user_profile';
+const LOCAL_STORAGE_KEY_MEALS = 'nutri_ai_logged_meals';
+const LOCAL_STORAGE_KEY_FAVS = 'nutri_ai_adaptive_favs';
 
 export default function Home() {
-  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loggedMeals, setLoggedMeals] = useState<LoggedMeal[]>([]);
+  const [adaptiveFavorites, setAdaptiveFavorites] = useState<MealCardProposal[]>([]);
+
+  // Navigation State
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
 
-  // Meals Logged Today
-  const [meals, setMeals] = useState<LoggedMeal[]>([
-    {
-      id: 'init-breakfast-1',
-      timestamp: new Date().toISOString(),
-      category: 'breakfast',
-      title: 'Omletă din 3 ouă cu spanac & 1 felie pâine secară',
-      calories: 380,
-      protein: 28,
-      carbs: 22,
-      fat: 20,
-      servings: 1,
-      source: 'manual',
-    },
-  ]);
-
-  // Adaptive Favorites (Shortlist runners-up)
-  const [adaptiveFavorites, setAdaptiveFavorites] = useState<AdaptiveFavorite[]>([]);
-
-  // Swipe Deck State
-  const [isPreSwipeModalOpen, setIsPreSwipeModalOpen] = useState(false);
-  const [preSwipeCategory, setPreSwipeCategory] = useState<MealCategory>('lunch');
-  const [activeDeckContext, setActiveDeckContext] = useState<PreSwipeContext | null>(null);
+  // Swipe & Matchup State
   const [deckRecipes, setDeckRecipes] = useState<MealCardProposal[]>([]);
   const [shortlistedMeals, setShortlistedMeals] = useState<MealCardProposal[]>([]);
   const [isShowdownActive, setIsShowdownActive] = useState(false);
 
-  // Modals & Sheets
+  // Modals & Bottom Sheets
+  const [isPreSwipeModalOpen, setIsPreSwipeModalOpen] = useState(false);
+  const [preSwipeCategory, setPreSwipeCategory] = useState<MealCategory>('dinner');
   const [detailRecipe, setDetailRecipe] = useState<MealCardProposal | null>(null);
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
-  const [quickLogCategory, setQuickLogCategory] = useState<MealCategory>('snack');
 
-  // Load from localStorage on client mount
+  // Hydrate from localStorage on client
   useEffect(() => {
     try {
-      const savedProfile = localStorage.getItem('nutri_user_profile');
-      if (savedProfile) {
-        setProfile(JSON.parse(savedProfile));
+      const storedProfile = localStorage.getItem(LOCAL_STORAGE_KEY_PROFILE);
+      if (storedProfile) {
+        setProfile(JSON.parse(storedProfile));
       }
-      const savedMeals = localStorage.getItem('nutri_daily_meals');
-      if (savedMeals) {
-        setMeals(JSON.parse(savedMeals));
+
+      const storedMeals = localStorage.getItem(LOCAL_STORAGE_KEY_MEALS);
+      if (storedMeals) {
+        setLoggedMeals(JSON.parse(storedMeals));
       }
-      const savedFavs = localStorage.getItem('nutri_adaptive_favs');
-      if (savedFavs) {
-        setAdaptiveFavorites(JSON.parse(savedFavs));
+
+      const storedFavs = localStorage.getItem(LOCAL_STORAGE_KEY_FAVS);
+      if (storedFavs) {
+        setAdaptiveFavorites(JSON.parse(storedFavs));
       }
     } catch (e) {
-      console.warn('Could not read from localStorage', e);
+      console.warn('Eroare la citirea din localStorage:', e);
     }
-    setIsLoaded(true);
   }, []);
 
-  // Save to localStorage
   const saveProfile = (newProfile: UserProfile) => {
     setProfile(newProfile);
-    localStorage.setItem('nutri_user_profile', JSON.stringify(newProfile));
+    localStorage.setItem(LOCAL_STORAGE_KEY_PROFILE, JSON.stringify(newProfile));
   };
 
-  const saveMeals = (newMeals: LoggedMeal[]) => {
-    setMeals(newMeals);
-    localStorage.setItem('nutri_daily_meals', JSON.stringify(newMeals));
+  const saveMeals = (meals: LoggedMeal[]) => {
+    setLoggedMeals(meals);
+    localStorage.setItem(LOCAL_STORAGE_KEY_MEALS, JSON.stringify(meals));
   };
 
-  const saveAdaptiveFavorites = (newFavs: AdaptiveFavorite[]) => {
-    setAdaptiveFavorites(newFavs);
-    localStorage.setItem('nutri_adaptive_favs', JSON.stringify(newFavs));
+  const saveFavorites = (favs: MealCardProposal[]) => {
+    setAdaptiveFavorites(favs);
+    localStorage.setItem(LOCAL_STORAGE_KEY_FAVS, JSON.stringify(favs));
   };
 
-  // Macro calculations
-  const consumedCalories = meals.reduce((sum, m) => sum + m.calories, 0);
-  const consumedProtein = meals.reduce((sum, m) => sum + m.protein, 0);
-  const consumedCarbs = meals.reduce((sum, m) => sum + m.carbs, 0);
-  const consumedFat = meals.reduce((sum, m) => sum + m.fat, 0);
+  // Macro Totals
+  const consumedTotals = loggedMeals.reduce(
+    (acc, m) => ({
+      calories: acc.calories + m.calories,
+      protein: acc.protein + m.protein,
+      carbs: acc.carbs + m.carbs,
+      fat: acc.fat + m.fat,
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
 
-  const remainingCalories = Math.max(0, profile.calorieTarget - consumedCalories);
-  const remainingProtein = Math.max(0, profile.proteinTarget - consumedProtein);
-  const remainingCarbs = Math.max(0, profile.carbsTarget - consumedCarbs);
-  const remainingFat = Math.max(0, profile.fatTarget - consumedFat);
+  const remainingCalories = Math.max(0, (profile?.calorieTarget || 2100) - consumedTotals.calories);
+  const remainingProtein = Math.max(0, (profile?.proteinTarget || 160) - consumedTotals.protein);
+  const remainingCarbs = Math.max(0, (profile?.carbsTarget || 200) - consumedTotals.carbs);
+  const remainingFat = Math.max(0, (profile?.fatTarget || 65) - consumedTotals.fat);
 
-  // Launch Swipe with Context
+  // Handlers for Swipe & Matchup
   const handleLaunchSwipe = async (context: PreSwipeContext) => {
-    setActiveDeckContext(context);
     setIsPreSwipeModalOpen(false);
-    setShortlistedMeals([]);
+    setCurrentTab('swipe');
     setIsShowdownActive(false);
+    setShortlistedMeals([]);
 
     try {
       const res = await fetch('/api/ai/generate-deck', {
@@ -141,306 +105,294 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(context),
       });
-      const data = await res.json();
-      if (data.success && data.recipes && data.recipes.length > 0) {
-        setDeckRecipes(data.recipes);
-      } else {
-        setDeckRecipes(filterOrGenerateRecipes(context));
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.recipes && data.recipes.length > 0) {
+          setDeckRecipes(data.recipes);
+          return;
+        }
       }
-    } catch (err) {
-      console.error('Deck fetch error:', err);
-      setDeckRecipes(filterOrGenerateRecipes(context));
+    } catch (e) {
+      console.warn('Apel API esuat, folosesc motorul local:', e);
     }
 
-    setCurrentTab('swipe');
+    const localRecipes = filterOrGenerateRecipes(context);
+    setDeckRecipes(localRecipes);
   };
 
-  // Shortlist Recipe from Swipe
-  const handleShortlistRecipe = (recipe: MealCardProposal) => {
-    const updated = [...shortlistedMeals, recipe];
-    setShortlistedMeals(updated);
-
-    // Auto-trigger showdown when 2 or 3 favorites are picked
-    if (updated.length >= 2) {
-      setIsShowdownActive(true);
-    }
+  const handleSwipeRight = (recipe: MealCardProposal) => {
+    setShortlistedMeals((prev) => {
+      if (prev.some((r) => r.id === recipe.id)) return prev;
+      const next = [...prev, recipe];
+      if (next.length >= 3) {
+        setIsShowdownActive(true);
+      }
+      return next;
+    });
   };
 
-  // Winner Selected from Showdown
+  const handleSwipeLeft = (_recipe: MealCardProposal) => {
+    // Ignored for current shortlist
+  };
+
   const handleSelectWinner = (winner: MealCardProposal, runnerUps: MealCardProposal[]) => {
-    // 1. Log winner into Daily Meals
     const newMeal: LoggedMeal = {
-      id: `meal-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      category: activeDeckContext?.mealCategory || 'lunch',
+      id: 'meal-' + Date.now(),
+      recipeId: winner.id,
       title: winner.title,
+      category: preSwipeCategory,
       calories: winner.calories,
       protein: winner.protein,
       carbs: winner.carbs,
       fat: winner.fat,
-      servings: winner.servings || 1,
-      recipeId: winner.id,
+      servings: 1,
       source: 'swipe',
+      timestamp: new Date().toISOString(),
     };
-    saveMeals([...meals, newMeal]);
+    saveMeals([newMeal, ...loggedMeals]);
 
-    // 2. Save runner-ups into Adaptive Favorites
     if (runnerUps.length > 0) {
-      const newFavEntries: AdaptiveFavorite[] = runnerUps.map((r) => ({
-        id: `fav-${Date.now()}-${r.id}`,
-        recipe: r,
-        savedAt: new Date().toISOString(),
-        timesSuggested: 1,
-        timesSelected: 0,
-      }));
-      saveAdaptiveFavorites([...adaptiveFavorites, ...newFavEntries]);
+      const updatedFavs = [...adaptiveFavorites];
+      runnerUps.forEach((ru) => {
+        if (!updatedFavs.some((f) => f.id === ru.id)) {
+          updatedFavs.push(ru);
+        }
+      });
+      saveFavorites(updatedFavs);
     }
 
-    // 3. Reset Swipe State & Open Recipe Bottom Sheet for instant cooking!
     setIsShowdownActive(false);
-    setShortlistedMeals([]);
-    setDeckRecipes([]);
     setDetailRecipe(winner);
     setCurrentTab('dashboard');
   };
 
-  // Log Meal manually from Recipe Bottom Sheet
   const handleCookAndLogFromSheet = (recipe: MealCardProposal) => {
     const newMeal: LoggedMeal = {
-      id: `meal-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      category: activeDeckContext?.mealCategory || 'dinner',
+      id: 'meal-' + Date.now(),
+      recipeId: recipe.id,
       title: recipe.title,
+      category: preSwipeCategory,
       calories: recipe.calories,
       protein: recipe.protein,
       carbs: recipe.carbs,
       fat: recipe.fat,
-      servings: recipe.servings || 1,
-      recipeId: recipe.id,
+      servings: 1,
       source: 'swipe',
+      timestamp: new Date().toISOString(),
     };
-    saveMeals([...meals, newMeal]);
+    saveMeals([newMeal, ...loggedMeals]);
     setDetailRecipe(null);
   };
 
-  // Add Quick Log Meal
   const handleAddQuickLogMeal = (mealData: Omit<LoggedMeal, 'id' | 'timestamp'>) => {
     const newMeal: LoggedMeal = {
       ...mealData,
-      id: `meal-quick-${Date.now()}`,
+      id: 'quick-meal-' + Date.now(),
       timestamp: new Date().toISOString(),
     };
-    saveMeals([...meals, newMeal]);
+    saveMeals([newMeal, ...loggedMeals]);
   };
 
-  // Delete Meal
   const handleDeleteMeal = (mealId: string) => {
-    saveMeals(meals.filter((m) => m.id !== mealId));
+    saveMeals(loggedMeals.filter((m) => m.id !== mealId));
   };
 
-  if (!isLoaded) return null;
+  const handleRemoveFavorite = (favId: string) => {
+    saveFavorites(adaptiveFavorites.filter((f) => f.id !== favId));
+  };
 
-  // If user hasn't finished onboarding, show Wizard
-  if (!profile.hasCompletedOnboarding) {
+  if (!profile) {
     return (
-      <OnboardingWizard
-        onComplete={(newProfile) => {
-          saveProfile(newProfile);
-        }}
-      />
+      <div className="app-shell">
+        <div className="mobile-frame">
+          <main className="screen-content">
+            <OnboardingWizard onComplete={saveProfile} />
+          </main>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <main className="screen-content">
-        {/* TAB 1: DASHBOARD */}
-        {currentTab === 'dashboard' && (
-          <div className="dashboard-view animate-fade-in">
-            {/* Top Bar */}
-            <div className="top-header">
-              <div className="user-greeting">
-                <span className="greeting-label">BUN VENIT,</span>
-                <h1 className="greeting-name">{profile.name} 👋</h1>
-              </div>
-
-              <button
-                type="button"
-                className="btn-quick-swipe-header"
-                onClick={() => {
-                  setPreSwipeCategory('dinner');
-                  setIsPreSwipeModalOpen(true);
-                }}
-              >
-                <Sparkles size={16} />
-                <span>Swipe Meal</span>
-              </button>
-            </div>
-
-            {/* Macro Circular & Bar Gauge */}
-            <MacroRings
-              calorieTarget={profile.calorieTarget}
-              consumedCalories={consumedCalories}
-              proteinTarget={profile.proteinTarget}
-              consumedProtein={consumedProtein}
-              carbsTarget={profile.carbsTarget}
-              consumedCarbs={consumedCarbs}
-              fatTarget={profile.fatTarget}
-              consumedFat={consumedFat}
-            />
-
-            {/* Swipe Callout Promo */}
-            <div
-              className="swipe-promo-banner"
-              onClick={() => {
-                setPreSwipeCategory('lunch');
-                setIsPreSwipeModalOpen(true);
-              }}
-            >
-              <div className="promo-left">
-                <div className="promo-icon-wrap">
-                  <Sparkles size={20} className="sparkle-gold" />
+    <div className="app-shell">
+      <div className="mobile-frame">
+        <main className="screen-content">
+          {/* TAB 1: DASHBOARD */}
+          {currentTab === 'dashboard' && (
+            <div className="dashboard-view animate-fade-in">
+              <div className="top-header">
+                <div className="user-greeting">
+                  <span className="greeting-label">Astăzi, {new Date().toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+                  <h1 className="greeting-name">Salut, {profile.name || 'Alex'}</h1>
                 </div>
-                <div>
-                  <h4 className="promo-title">Nu știi ce să mănânci?</h4>
-                  <span className="promo-sub">Gătește din frigider sau cu buget fix</span>
-                </div>
-              </div>
-              <span className="promo-cta">Swipe ➔</span>
-            </div>
 
-            {/* Daily Meals Journal */}
-            <DailyJournal
-              meals={meals}
-              onDeleteMeal={handleDeleteMeal}
-              onOpenSwipeForCategory={(cat) => {
-                setPreSwipeCategory(cat);
-                setIsPreSwipeModalOpen(true);
-              }}
-              onOpenQuickLogForCategory={(cat) => {
-                setQuickLogCategory(cat);
-                setIsQuickLogOpen(true);
-              }}
-            />
-          </div>
-        )}
-
-        {/* TAB 2: SWIPE DECK */}
-        {currentTab === 'swipe' && (
-          <div className="swipe-tab-view animate-fade-in">
-            {isShowdownActive ? (
-              <MatchupShowdown
-                shortlistedMeals={shortlistedMeals}
-                onSelectWinner={handleSelectWinner}
-                onOpenDetails={(rec) => setDetailRecipe(rec)}
-                onCancel={() => setIsShowdownActive(false)}
-              />
-            ) : deckRecipes.length > 0 && activeDeckContext ? (
-              <SwipeDeck
-                initialRecipes={deckRecipes}
-                context={activeDeckContext}
-                onShortlistRecipe={handleShortlistRecipe}
-                onOpenDetails={(rec) => setDetailRecipe(rec)}
-                onTriggerShowdown={() => setIsShowdownActive(true)}
-                shortlistedMeals={shortlistedMeals}
-                onBackToConfig={() => setIsPreSwipeModalOpen(true)}
-              />
-            ) : (
-              <div className="swipe-idle-screen animate-fade-in">
-                <div className="idle-hero-icon">
-                  <Sparkles size={36} className="sparkle-gold" />
-                </div>
-                <h2 className="idle-title">The Swipe Machine</h2>
-                <p className="idle-desc">
-                  Alege dacă vrei să gătești cu ce ai în frigider, dacă frigiderul e gol și vrei rețete într-un buget sau dacă mănânci în oraș.
-                </p>
                 <button
                   type="button"
-                  className="btn-start-swipe"
+                  className="btn-quick-swipe-header"
                   onClick={() => setIsPreSwipeModalOpen(true)}
                 >
-                  <Sparkles size={18} />
-                  <span>Configurează & Deschide Deck-ul</span>
+                  <Sparkles size={15} />
+                  <span>Swipe Meal</span>
                 </button>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* TAB 3: QUICK LOG */}
-        {currentTab === 'quick_log' && (
-          <div className="quick-log-tab-view animate-fade-in">
-            <QuickLogModal
-              isOpen={true}
-              onClose={() => setCurrentTab('dashboard')}
-              onLogMeal={(m) => {
-                handleAddQuickLogMeal(m);
+              {/* Macro Circular Gauge & Summary */}
+              <MacroRings
+                calorieTarget={profile.calorieTarget}
+                consumedCalories={consumedTotals.calories}
+                proteinTarget={profile.proteinTarget}
+                consumedProtein={consumedTotals.protein}
+                carbsTarget={profile.carbsTarget}
+                consumedCarbs={consumedTotals.carbs}
+                fatTarget={profile.fatTarget}
+                consumedFat={consumedTotals.fat}
+              />
+
+              <div
+                className="swipe-promo-banner"
+                onClick={() => setIsPreSwipeModalOpen(true)}
+              >
+                <div className="promo-left">
+                  <div className="promo-icon-wrap">
+                    <Sparkles size={20} className="sparkle-gold" />
+                  </div>
+                  <div>
+                    <h3 className="promo-title">The Swipe Machine</h3>
+                    <span className="promo-sub">Găsește rețeta optimă pe macro-urile rămase</span>
+                  </div>
+                </div>
+                <span className="promo-cta">Start ➔</span>
+              </div>
+
+              <DailyJournal
+                loggedMeals={loggedMeals}
+                onDeleteMeal={handleDeleteMeal}
+                onOpenQuickLog={() => {
+                  setIsQuickLogOpen(true);
+                }}
+                onOpenSwipe={(cat) => {
+                  setPreSwipeCategory(cat);
+                  setIsPreSwipeModalOpen(true);
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB 2: SWIPE DECK */}
+          {currentTab === 'swipe' && (
+            <div className="swipe-tab-view animate-fade-in">
+              {isShowdownActive ? (
+                <MatchupShowdown
+                  shortlistedMeals={shortlistedMeals}
+                  onSelectWinner={handleSelectWinner}
+                  onOpenDetails={(rec) => setDetailRecipe(rec)}
+                  onCancel={() => setIsShowdownActive(false)}
+                />
+              ) : deckRecipes.length > 0 ? (
+                <SwipeDeck
+                  cards={deckRecipes}
+                  onSwipeRight={handleSwipeRight}
+                  onSwipeLeft={handleSwipeLeft}
+                  onOpenDetails={(rec) => setDetailRecipe(rec)}
+                  onStartShowdown={() => setIsShowdownActive(true)}
+                  shortlistCount={shortlistedMeals.length}
+                />
+              ) : (
+                <div className="swipe-idle-screen animate-fade-in">
+                  <div className="idle-hero-icon">
+                    <Sparkles size={36} className="sparkle-gold" />
+                  </div>
+                  <h2 className="idle-title">The Swipe Machine</h2>
+                  <p className="idle-desc">
+                    Alege dacă vrei să gătești cu ce ai în frigider, dacă frigiderul e gol și vrei rețete într-un buget fix sau dacă mănânci în oraș.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-start-swipe"
+                    onClick={() => setIsPreSwipeModalOpen(true)}
+                  >
+                    <Sparkles size={18} />
+                    <span>Configurează & Deschide Deck-ul</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: QUICK LOG */}
+          {currentTab === 'quick_log' && (
+            <div className="quick-log-tab-view animate-fade-in">
+              <QuickLogModal
+                isOpen={true}
+                onClose={() => setCurrentTab('dashboard')}
+                onSaveQuickMeal={(m) => {
+                  handleAddQuickLogMeal(m);
+                  setCurrentTab('dashboard');
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB 4: ADAPTIVE FAVORITES */}
+          {currentTab === 'favorites' && (
+            <AdaptiveFavoritesModal
+              favorites={adaptiveFavorites}
+              onOpenDetails={(rec) => setDetailRecipe(rec)}
+              onRemoveFavorite={handleRemoveFavorite}
+              onCookAndLog={(rec) => {
+                handleCookAndLogFromSheet(rec);
                 setCurrentTab('dashboard');
               }}
-              defaultCategory="snack"
+              onClose={() => setCurrentTab('dashboard')}
             />
-          </div>
-        )}
+          )}
 
-        {/* TAB 4: ADAPTIVE FAVORITES */}
-        {currentTab === 'favorites' && (
-          <AdaptiveFavorites
-            favorites={adaptiveFavorites}
-            onCookRecipe={(rec) => {
-              handleCookAndLogFromSheet(rec);
-              setCurrentTab('dashboard');
-            }}
-            onOpenDetails={(rec) => setDetailRecipe(rec)}
-          />
-        )}
+          {/* TAB 5: PROFILE */}
+          {currentTab === 'profile' && (
+            <ProfileScreen
+              profile={profile}
+              onUpdateProfile={saveProfile}
+              onResetOnboarding={() => {
+                setProfile(null);
+                localStorage.removeItem(LOCAL_STORAGE_KEY_PROFILE);
+              }}
+            />
+          )}
+        </main>
 
-        {/* TAB 5: PROFILE */}
-        {currentTab === 'profile' && (
-          <ProfileScreen
-            profile={profile}
-            onUpdateProfile={saveProfile}
-            onResetOnboarding={() => {
-              saveProfile({ ...profile, hasCompletedOnboarding: false });
-            }}
-          />
-        )}
-      </main>
+        {/* Floating Modals */}
+        <PreSwipeModal
+          isOpen={isPreSwipeModalOpen}
+          onClose={() => setIsPreSwipeModalOpen(false)}
+          onLaunch={handleLaunchSwipe}
+          remainingCalories={remainingCalories}
+          remainingProtein={remainingProtein}
+          remainingCarbs={remainingCarbs}
+          remainingFat={remainingFat}
+          currentCategory={preSwipeCategory}
+        />
 
-      {/* Floating Modals */}
-      <PreSwipeModal
-        isOpen={isPreSwipeModalOpen}
-        onClose={() => setIsPreSwipeModalOpen(false)}
-        onLaunchSwipe={handleLaunchSwipe}
-        defaultCategory={preSwipeCategory}
-        remainingCalories={remainingCalories}
-        remainingProtein={remainingProtein}
-        remainingCarbs={remainingCarbs}
-        remainingFat={remainingFat}
-        userAppliances={profile.appliances}
-      />
+        <RecipeBottomSheet
+          recipe={detailRecipe}
+          isOpen={!!detailRecipe}
+          onClose={() => setDetailRecipe(null)}
+          onCookAndLog={handleCookAndLogFromSheet}
+        />
 
-      <RecipeBottomSheet
-        recipe={detailRecipe}
-        isOpen={!!detailRecipe}
-        onClose={() => setDetailRecipe(null)}
-        onCookAndLog={handleCookAndLogFromSheet}
-      />
-
-      {isQuickLogOpen && (
         <QuickLogModal
           isOpen={isQuickLogOpen}
           onClose={() => setIsQuickLogOpen(false)}
-          onLogMeal={handleAddQuickLogMeal}
-          defaultCategory={quickLogCategory}
+          onSaveQuickMeal={handleAddQuickLogMeal}
         />
-      )}
 
-      {/* Persistent Bottom Bar */}
-      <BottomNavigation
-        currentTab={currentTab}
-        onTabChange={(tab) => setCurrentTab(tab)}
-        shortlistCount={shortlistedMeals.length}
-      />
+        {/* Persistent Bottom Bar */}
+        <BottomNavigation
+          currentTab={currentTab}
+          onTabChange={(tab) => setCurrentTab(tab)}
+          shortlistCount={shortlistedMeals.length}
+        />
+      </div>
 
       <style jsx>{`
         .dashboard-view, .swipe-tab-view, .quick-log-tab-view {
@@ -481,7 +433,7 @@ export default function Home() {
           gap: 6px;
           padding: 8px 14px;
           background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-          color: #07090e;
+          color: #06080d;
           border-radius: var(--radius-full);
           font-size: 0.78rem;
           font-weight: 800;
@@ -498,10 +450,10 @@ export default function Home() {
           align-items: center;
           justify-content: space-between;
           padding: 14px 16px;
-          background: linear-gradient(145deg, #19253d 0%, #101828 100%);
+          background: linear-gradient(145deg, #18243c 0%, #0f1626 100%);
           border: 1px solid rgba(245, 158, 11, 0.3);
           border-radius: var(--radius-lg);
-          margin-bottom: 20px;
+          margin-bottom: 18px;
           cursor: pointer;
           transition: all var(--duration-fast);
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
@@ -559,8 +511,8 @@ export default function Home() {
         }
 
         .idle-hero-icon {
-          width: 72px;
-          height: 72px;
+          width: 68px;
+          height: 68px;
           border-radius: var(--radius-full);
           background: rgba(245, 158, 11, 0.12);
           display: flex;
@@ -569,14 +521,14 @@ export default function Home() {
         }
 
         .idle-title {
-          font-size: 1.4rem;
+          font-size: 1.35rem;
           font-weight: 900;
           color: var(--text-primary);
           letter-spacing: -0.02em;
         }
 
         .idle-desc {
-          font-size: 0.85rem;
+          font-size: 0.84rem;
           color: var(--text-secondary);
           line-height: 1.5;
           max-width: 320px;
@@ -589,9 +541,9 @@ export default function Home() {
           gap: 8px;
           padding: 14px 22px;
           background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-          color: #07090e;
+          color: #06080d;
           border-radius: var(--radius-md);
-          font-size: 0.95rem;
+          font-size: 0.94rem;
           font-weight: 800;
           box-shadow: 0 4px 20px rgba(245, 158, 11, 0.45);
           transition: transform var(--duration-fast);
@@ -601,6 +553,6 @@ export default function Home() {
           transform: translateY(-1px);
         }
       `}</style>
-    </>
+    </div>
   );
 }

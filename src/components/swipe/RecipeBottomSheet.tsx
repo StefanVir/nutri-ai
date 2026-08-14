@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { MealCardProposal } from '@/types/nutrition';
-import { X, Clock, Flame, Dumbbell, ShoppingBag, CheckCircle, ChefHat, Check } from 'lucide-react';
+import { X, Clock, Check, Utensils, ListOrdered } from 'lucide-react';
 
 interface RecipeBottomSheetProps {
   recipe: MealCardProposal | null;
@@ -22,34 +22,33 @@ export function RecipeBottomSheet({
   return (
     <div className="sheet-overlay animate-fade-in" onClick={onClose}>
       <div className="sheet-panel animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        {/* Top Drag Handle */}
         <div className="sheet-drag-handle" />
 
         {/* Header */}
         <div className="sheet-header">
           <div className="header-tags-row">
-            <span className="mode-chip">{recipe.mode}</span>
+            <span className="mode-chip">{recipe.mode === 'fridge' ? 'Din Frigider' : 'Smart Grocery'}</span>
             <div className="time-pill">
               <Clock size={13} />
-              <span className="tabular-num">Prep: {recipe.prepTimeMinutes}m | Gătit: {recipe.cookTimeMinutes}m</span>
+              <span className="tabular-num">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
             </div>
           </div>
           <button type="button" className="btn-close-sheet" onClick={onClose} aria-label="Închide">
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         <h2 className="recipe-full-title">{recipe.title}</h2>
         <p className="recipe-match-desc">{recipe.matchReason}</p>
 
-        {/* Macro Summary Grid */}
+        {/* Macro Strip */}
         <div className="sheet-macros-grid">
           <div className="macro-cell macro-cal">
-            <Flame size={15} />
             <span className="cell-num tabular-num">{recipe.calories}</span>
-            <span className="cell-sub">Calorii</span>
+            <span className="cell-sub">kcal</span>
           </div>
           <div className="macro-cell macro-prot">
-            <Dumbbell size={15} />
             <span className="cell-num tabular-num">{recipe.protein}g</span>
             <span className="cell-sub">Proteine</span>
           </div>
@@ -63,57 +62,55 @@ export function RecipeBottomSheet({
           </div>
         </div>
 
-        {/* Scrollable Content */}
+        {/* Scrollable Ingredients & Steps */}
         <div className="sheet-scroll-body">
           {/* Ingredients Section */}
           <div className="recipe-section">
             <div className="section-head">
-              <ShoppingBag size={16} className="head-icon" />
-              <h4 className="section-name">Ingrediente Necesare ({recipe.ingredients.length})</h4>
+              <Utensils size={16} className="head-icon" />
+              <h3 className="section-name">Ingrediente Necesare ({recipe.servings} {recipe.servings === 1 ? 'porție' : 'porții'})</h3>
             </div>
 
             <div className="ingredients-list">
               {recipe.ingredients.map((ing, i) => (
                 <div key={i} className={`ingr-row ${ing.toBuy ? 'ingr-to-buy' : ''}`}>
                   <div className="ingr-left">
-                    <div className="ingr-bullet" />
+                    <span className="ingr-bullet" />
                     <span className="ingr-name">{ing.name}</span>
                   </div>
                   <div className="ingr-right">
                     <span className="ingr-amount tabular-num">{ing.amount}</span>
-                    {ing.toBuy && <span className="to-buy-badge">De cumpărat</span>}
+                    {ing.toBuy && <span className="to-buy-badge">De Cumpărat</span>}
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Instructions Section */}
+          {/* Cooking Steps */}
           <div className="recipe-section">
             <div className="section-head">
-              <ChefHat size={16} className="head-icon" />
-              <h4 className="section-name">Mod de Preparare Pas cu Pas</h4>
+              <ListOrdered size={16} className="head-icon" />
+              <h3 className="section-name">Mod de Preparare Pas cu Pas</h3>
             </div>
 
             <div className="instructions-list">
               {recipe.instructions.map((step, idx) => (
                 <div key={idx} className="step-row">
-                  <div className="step-index-pill tabular-num">{idx + 1}</div>
+                  <span className="step-index-pill tabular-num">{idx + 1}</span>
                   <p className="step-text">{step}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Appliances Used */}
-          {recipe.appliancesUsed.length > 0 && (
-            <div className="appliances-note">
-              <strong>Echipamente folosite:</strong> {recipe.appliancesUsed.join(', ')}
-            </div>
-          )}
+          {/* Appliances Note */}
+          <div className="appliances-note">
+            <span>Echipamente utilizate: <strong>{recipe.appliancesUsed.join(', ')}</strong></span>
+          </div>
         </div>
 
-        {/* Bottom Cook & Log CTA */}
+        {/* Footer Action */}
         {onCookAndLog && (
           <div className="sheet-footer">
             <button
@@ -121,7 +118,7 @@ export function RecipeBottomSheet({
               className="btn-cook-log"
               onClick={() => onCookAndLog(recipe)}
             >
-              <CheckCircle size={18} />
+              <Check size={18} />
               <span>Gătește & Loghează în Jurnal</span>
             </button>
           </div>
@@ -156,7 +153,7 @@ export function RecipeBottomSheet({
           }
 
           .sheet-drag-handle {
-            width: 40px;
+            width: 36px;
             height: 4px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: var(--radius-full);
@@ -168,7 +165,7 @@ export function RecipeBottomSheet({
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 18px;
+            padding: 8px 18px;
             flex-shrink: 0;
           }
 
@@ -179,7 +176,7 @@ export function RecipeBottomSheet({
           }
 
           .mode-chip {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 800;
             text-transform: uppercase;
             padding: 3px 8px;
@@ -203,26 +200,21 @@ export function RecipeBottomSheet({
             border-radius: var(--radius-full);
           }
 
-          .btn-close-sheet:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.08);
-          }
-
           .recipe-full-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 800;
             color: var(--text-primary);
             padding: 0 18px;
             line-height: 1.25;
             letter-spacing: -0.01em;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
           }
 
           .recipe-match-desc {
             font-size: 0.78rem;
             color: #c7d2fe;
             padding: 0 18px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             line-height: 1.35;
           }
 
@@ -248,7 +240,7 @@ export function RecipeBottomSheet({
           .macro-fat { background: var(--macro-fat-bg); color: var(--macro-fat); border: 1px solid rgba(244, 63, 94, 0.2); }
 
           .cell-num { font-size: 0.95rem; font-weight: 800; }
-          .cell-sub { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; }
+          .cell-sub { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
 
           .sheet-scroll-body {
             flex: 1;
@@ -256,13 +248,13 @@ export function RecipeBottomSheet({
             padding: 12px 18px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 16px;
           }
 
           .recipe-section {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
           }
 
           .section-head {
@@ -276,7 +268,7 @@ export function RecipeBottomSheet({
           }
 
           .section-name {
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 800;
             color: var(--text-primary);
           }
@@ -295,7 +287,7 @@ export function RecipeBottomSheet({
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
-            font-size: 0.82rem;
+            font-size: 0.8rem;
           }
 
           .ingr-to-buy {
@@ -346,22 +338,22 @@ export function RecipeBottomSheet({
           .instructions-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
           }
 
           .step-row {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
+            gap: 10px;
           }
 
           .step-index-pill {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: var(--radius-full);
             background: var(--accent-primary);
             color: #ffffff;
-            font-size: 0.78rem;
+            font-size: 0.74rem;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -371,15 +363,15 @@ export function RecipeBottomSheet({
           }
 
           .step-text {
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
-            line-height: 1.45;
+            line-height: 1.4;
           }
 
           .appliances-note {
-            font-size: 0.76rem;
+            font-size: 0.74rem;
             color: var(--text-tertiary);
-            padding: 10px 12px;
+            padding: 8px 12px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: var(--radius-sm);
           }
@@ -403,7 +395,7 @@ export function RecipeBottomSheet({
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: #ffffff;
             border-radius: var(--radius-md);
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 800;
             box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
             transition: transform var(--duration-fast);
