@@ -106,15 +106,18 @@ export interface CulinaryArchetypePlan {
   preparationStyle: 'saute_sear' | 'fresh_bowl' | 'skillet_omelette' | 'roasted_bake' | 'crisp_wrap';
 }
 
+import { prioritizeZeroWasteIngredients } from './perishabilityRanker';
+
 /**
  * Builds 3 distinct, non-overlapping culinary archetypes from user inputs
- * ensuring NO Frankenstein mashup of clashing proteins.
+ * ensuring NO Frankenstein mashup of clashing proteins and prioritizing zero-waste perishable items.
  */
 export function buildCulinaryArchetypes(
   rawIngredients: string[],
   appliances: string[] = ['Aragaz / Tigaie']
 ): CulinaryArchetypePlan[] {
-  const classified = rawIngredients.map(classifyIngredient);
+  const sortedIngredients = prioritizeZeroWasteIngredients(rawIngredients);
+  const classified = sortedIngredients.map(classifyIngredient);
   const heroProteins = classified.filter((c) => c.role === 'HERO_PROTEIN').map((c) => c.name);
   const starches = classified.filter((c) => c.role === 'STARCH_BASE').map((c) => c.name);
   const veggies = classified.filter((c) => c.role === 'FIBER_VEGGIES').map((c) => c.name);
