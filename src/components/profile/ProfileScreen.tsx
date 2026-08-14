@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { UserProfile, Goal } from '@/types/nutrition';
@@ -365,7 +365,7 @@ export function ProfileScreen({
           color: var(--text-secondary);
         }
 
-        .btn-re-onboard:hover {
+        .btn-re-onboard:active {
           background: rgba(255, 255, 255, 0.1);
           color: var(--text-primary);
         }

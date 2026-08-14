@@ -151,3 +151,11 @@ div[data-nextjs-portal] {
   padding-top: max(16px, env(safe-area-inset-top, 16px));
 }
 
+/* Accessibility: respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

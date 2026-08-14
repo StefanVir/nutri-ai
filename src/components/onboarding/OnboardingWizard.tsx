@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { UserProfile, Goal, ActivityLevel, Gender } from '@/types/nutrition';
@@ -443,7 +443,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           transition: all var(--duration-fast) var(--ease-out-smooth);
         }
 
-        .choice-card:hover {
+        .choice-card:active {
           background: var(--bg-card-hover);
         }
 
@@ -761,8 +761,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           transition: transform var(--duration-fast);
         }
 
-        .btn-next:hover, .btn-finish:hover {
-          transform: translateY(-1px);
+        .btn-next:active, .btn-finish:active {
+          transform: scale(0.97);
         }
       `}</style>
     </div>

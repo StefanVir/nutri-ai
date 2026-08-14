@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef } from 'react';
 import { MealCardProposal } from '@/types/nutrition';
@@ -160,7 +160,7 @@ export function SwipeDeck({
           className="deck-card active-card"
           style={{
             transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotation}deg)`,
-            transition: isDragging ? 'none' : 'transform 0.3s var(--ease-out-smooth)',
+            transition: isDragging ? 'none' : 'transform 0.3s var(--ease-snap)',
           }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -524,8 +524,12 @@ export function SwipeDeck({
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all var(--duration-fast) var(--ease-out-smooth);
+          transition: transform var(--duration-fast) var(--ease-snap), background var(--duration-fast);
           box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-ctrl:active {
+          transform: scale(0.90);
         }
 
         .btn-dislike {

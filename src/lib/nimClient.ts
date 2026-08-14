@@ -20,10 +20,18 @@ function getOpenAIClient(): OpenAI | null {
 function parseJsonResponse(raw: string): any {
   if (!raw) throw new Error('Empty text content');
 
-  // Strip markdown code fences if model returns ```json ... ```
   let cleaned = raw.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+
+  // Extract from markdown code fence if present
+  const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (codeBlockMatch) {
+    cleaned = codeBlockMatch[1].trim();
+  } else {
+    // Otherwise find outer JSON object or array
+    const jsonMatch = cleaned.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (jsonMatch) {
+      cleaned = jsonMatch[1].trim();
+    }
   }
 
   return JSON.parse(cleaned);

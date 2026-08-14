@@ -293,7 +293,7 @@ export function QuickLogModal({
 
         <div className="modal-header">
           <div className="header-titles">
-            <h3 className="modal-title">📸 Scanare Masă & Calibrare AI</h3>
+            <h3 className="modal-title">Scanare Masă & Calibrare AI</h3>
             <span className="modal-sub">Identificare Vizuală • Bază USDA • Reglare Gramaje</span>
           </div>
           <button type="button" className="btn-close" onClick={onClose} aria-label="Închide">
@@ -309,7 +309,7 @@ export function QuickLogModal({
             onClick={() => { setActiveTab('photo'); setInteractiveItems([]); }}
           >
             <Camera size={16} />
-            <span>📸 Scanare Foto (AI Vision)</span>
+            <span>Scanare Foto (AI Vision)</span>
           </button>
           <button
             type="button"
@@ -317,7 +317,7 @@ export function QuickLogModal({
             onClick={() => { setActiveTab('text'); setInteractiveItems([]); }}
           >
             <Sparkles size={16} />
-            <span>✍️ Text / Descriere</span>
+            <span>Text / Descriere</span>
           </button>
         </div>
 

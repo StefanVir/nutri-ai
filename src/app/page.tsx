@@ -14,7 +14,7 @@ import { QuickLogModal } from '@/components/dashboard/QuickLogModal';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
 import { AdaptiveFavoritesModal } from '@/components/favorites/AdaptiveFavoritesModal';
 import { filterOrGenerateRecipes } from '@/lib/mockRecipes';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY_PROFILE = 'nutri_ai_user_profile';
 const LOCAL_STORAGE_KEY_MEALS = 'nutri_ai_logged_meals';
@@ -204,20 +204,15 @@ export default function Home() {
 
   if (!profile) {
     return (
-      <div className="app-shell">
-        <div className="mobile-frame">
-          <main className="screen-content">
-            <OnboardingWizard onComplete={saveProfile} />
-          </main>
-        </div>
-      </div>
+      <main className="screen-content">
+        <OnboardingWizard onComplete={saveProfile} />
+      </main>
     );
   }
 
   return (
-    <div className="app-shell">
-      <div className="mobile-frame">
-        <main className="screen-content">
+    <>
+      <main className="screen-content">
           {/* TAB 1: DASHBOARD */}
           {currentTab === 'dashboard' && (
             <div className="dashboard-view animate-fade-in">
@@ -231,6 +226,7 @@ export default function Home() {
                   type="button"
                   className="btn-quick-swipe-header"
                   onClick={() => setIsPreSwipeModalOpen(true)}
+                  aria-label="Deschide Swipe Meal"
                 >
                   <Sparkles size={15} />
                   <span>Swipe Meal</span>
@@ -251,7 +247,16 @@ export default function Home() {
 
               <div
                 className="swipe-promo-banner"
+                role="button"
+                tabIndex={0}
+                aria-label="Deschide The Swipe Machine"
                 onClick={() => setIsPreSwipeModalOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsPreSwipeModalOpen(true);
+                  }
+                }}
               >
                 <div className="promo-left">
                   <div className="promo-icon-wrap">
@@ -262,7 +267,10 @@ export default function Home() {
                     <span className="promo-sub">Găsește rețeta optimă pe macro-urile rămase</span>
                   </div>
                 </div>
-                <span className="promo-cta">Start ➔</span>
+                <span className="promo-cta">
+                  <span>Start</span>
+                  <ArrowRight size={14} />
+                </span>
               </div>
 
               <DailyJournal
@@ -331,6 +339,7 @@ export default function Home() {
                 setCurrentTab('dashboard');
               }}
               onClose={() => setCurrentTab('dashboard')}
+              onStartSwipe={() => setCurrentTab('swipe')}
             />
           )}
 
@@ -345,7 +354,7 @@ export default function Home() {
               }}
             />
           )}
-        </main>
+      </main>
 
         {/* Global Floating Glass Dock (Hidden when modal or sheet is open) */}
         {!isQuickLogOpen && !isPreSwipeModalOpen && !detailRecipe && (
@@ -389,7 +398,7 @@ export default function Home() {
             setDetailRecipe(null);
           }}
         />
-      </div>
+
 
       <style jsx>{`
         .dashboard-view, .swipe-tab-view, .quick-log-tab-view {
@@ -438,8 +447,8 @@ export default function Home() {
           transition: transform var(--duration-fast);
         }
 
-        .btn-quick-swipe-header:hover {
-          transform: translateY(-1px);
+        .btn-quick-swipe-header:active {
+          transform: scale(0.97);
         }
 
         .swipe-promo-banner {
@@ -456,9 +465,9 @@ export default function Home() {
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
         }
 
-        .swipe-promo-banner:hover {
+        .swipe-promo-banner:active {
           border-color: var(--macro-calories);
-          transform: translateY(-1px);
+          transform: scale(0.98);
         }
 
         .promo-left {
@@ -493,6 +502,9 @@ export default function Home() {
         }
 
         .promo-cta {
+          display: flex;
+          align-items: center;
+          gap: 4px;
           font-size: 0.8rem;
           font-weight: 800;
           color: var(--macro-calories);
@@ -546,10 +558,10 @@ export default function Home() {
           transition: transform var(--duration-fast);
         }
 
-        .btn-start-swipe:hover {
-          transform: translateY(-1px);
+        .btn-start-swipe:active {
+          transform: scale(0.97);
         }
       `}</style>
-    </div>
+    </>
   );
 }

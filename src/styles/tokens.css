@@ -57,6 +57,7 @@
 
   /* Easing */
   --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
 
@@ -64,6 +65,7 @@
   --mobile-max-width: 440px;
   --bottom-bar-height: 76px;
   --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --bottom-safe-padding: calc(var(--bottom-bar-height) + var(--safe-bottom) + 20px);
 
   /* Z-Index Hierarchy */
   --z-base: 0;

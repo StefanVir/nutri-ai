@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { LoggedMeal, MealCategory } from '@/types/nutrition';
@@ -217,7 +217,8 @@ export function DailyJournal({
           gap: 3px;
           font-size: 0.68rem;
           font-weight: 700;
-          padding: 4px 8px;
+          padding: 8px 12px;
+          min-height: 44px;
           background: rgba(255, 255, 255, 0.06);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
@@ -286,11 +287,16 @@ export function DailyJournal({
 
         .btn-delete-meal {
           color: var(--text-tertiary);
-          padding: 4px;
+          padding: 10px;
+          min-width: 44px;
+          min-height: 44px;
           border-radius: var(--radius-sm);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .btn-delete-meal:hover {
+        .btn-delete-meal:active {
           color: var(--status-error);
           background: rgba(239, 68, 68, 0.1);
         }

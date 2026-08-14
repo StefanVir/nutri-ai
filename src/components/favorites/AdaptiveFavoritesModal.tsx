@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { MealCardProposal } from '@/types/nutrition';
@@ -10,6 +10,7 @@ interface AdaptiveFavoritesModalProps {
   onRemoveFavorite: (id: string) => void;
   onCookAndLog: (recipe: MealCardProposal) => void;
   onClose: () => void;
+  onStartSwipe?: () => void;
 }
 
 export function AdaptiveFavoritesModal({
@@ -18,6 +19,7 @@ export function AdaptiveFavoritesModal({
   onRemoveFavorite,
   onCookAndLog,
   onClose,
+  onStartSwipe,
 }: AdaptiveFavoritesModalProps) {
   return (
     <div className="fav-screen animate-fade-in">
@@ -35,9 +37,20 @@ export function AdaptiveFavoritesModal({
       <div className="fav-list">
         {favorites.length === 0 ? (
           <div className="empty-fav-box">
-            <Bookmark size={32} className="empty-icon" />
+            <div className="empty-icon-circle">
+              <Bookmark size={28} className="empty-icon" />
+            </div>
             <strong className="empty-head">Nicio rețetă favorită salvată</strong>
-            <p className="empty-desc">Dă Swipe Right pe cardurile care îți plac pentru a le adăuga în memorie.</p>
+            <p className="empty-desc">Dă Swipe Right pe cardurile care îți plac în Swipe Deck pentru a le adăuga automat în memorie.</p>
+            {onStartSwipe && (
+              <button
+                type="button"
+                className="btn-empty-swipe"
+                onClick={onStartSwipe}
+              >
+                <span>Explorează Swipe Deck</span>
+              </button>
+            )}
           </div>
         ) : (
           favorites.map((recipe) => (
@@ -50,7 +63,7 @@ export function AdaptiveFavoritesModal({
                   onClick={() => onRemoveFavorite(recipe.id)}
                   aria-label="Șterge din favorite"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={15} />
                 </button>
               </div>
 
@@ -141,23 +154,52 @@ export function AdaptiveFavoritesModal({
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 8px;
+          gap: 10px;
         }
 
-        .empty-icon {
-          color: var(--text-tertiary);
+        .empty-icon-circle {
+          width: 54px;
+          height: 54px;
+          border-radius: var(--radius-full);
+          background: rgba(16, 185, 129, 0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--macro-protein);
           margin-bottom: 4px;
         }
 
         .empty-head {
-          font-size: 0.95rem;
+          font-size: 1rem;
+          font-weight: 800;
           color: var(--text-primary);
         }
 
         .empty-desc {
-          font-size: 0.76rem;
+          font-size: 0.78rem;
           color: var(--text-secondary);
           max-width: 280px;
+          line-height: 1.4;
+        }
+
+        .btn-empty-swipe {
+          margin-top: 8px;
+          padding: 10px 18px;
+          min-height: 44px;
+          background: rgba(16, 185, 129, 0.16);
+          border: 1px solid rgba(16, 185, 129, 0.4);
+          border-radius: var(--radius-full);
+          color: var(--macro-protein);
+          font-size: 0.8rem;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-empty-swipe:active {
+          transform: scale(0.97);
+          background: rgba(16, 185, 129, 0.25);
         }
 
         .fav-card {
@@ -184,11 +226,18 @@ export function AdaptiveFavoritesModal({
 
         .btn-del-fav {
           color: var(--text-tertiary);
-          padding: 4px;
+          padding: 10px;
+          min-width: 44px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: var(--radius-sm);
         }
 
-        .btn-del-fav:hover {
+        .btn-del-fav:active {
           color: var(--status-error);
+          background: rgba(239, 68, 68, 0.1);
         }
 
         .fav-meta-row {
@@ -226,7 +275,8 @@ export function AdaptiveFavoritesModal({
           display: flex;
           align-items: center;
           gap: 4px;
-          padding: 8px 12px;
+          padding: 10px 14px;
+          min-height: 44px;
           background: rgba(255, 255, 255, 0.06);
           border: 1px solid var(--border-subtle);
           border-radius: var(--radius-sm);
@@ -235,18 +285,29 @@ export function AdaptiveFavoritesModal({
           color: var(--text-secondary);
         }
 
+        .btn-fav-view:active {
+          background: rgba(255, 255, 255, 0.1);
+          transform: scale(0.97);
+        }
+
         .btn-fav-cook {
           flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 4px;
-          padding: 8px 12px;
+          padding: 10px 14px;
+          min-height: 44px;
           background: var(--macro-protein);
           color: #061e14;
           border-radius: var(--radius-sm);
           font-size: 0.76rem;
           font-weight: 800;
+        }
+
+        .btn-fav-cook:active {
+          transform: scale(0.97);
+          filter: brightness(0.95);
         }
       `}</style>
     </div>

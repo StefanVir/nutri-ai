@@ -317,8 +317,8 @@
   transition: transform var(--duration-fast);
 }
 
-.swipe-promo-banner:hover {
-  transform: translateY(-1px);
+.swipe-promo-banner:active {
+  transform: scale(0.98);
   border-color: var(--macro-calories);
 }
 
@@ -360,7 +360,7 @@
    4. DAILY JOURNAL (DASHBOARD)
    ========================================= */
 .daily-journal-section {
-  padding: 0 16px 140px 16px;
+  padding: 0 16px var(--bottom-safe-padding) 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -418,6 +418,7 @@
   font-size: 0.76rem;
   font-weight: 800;
   color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 .meals-list {
@@ -446,6 +447,7 @@
   font-size: 0.74rem;
   font-weight: 800;
   color: var(--macro-calories);
+  font-variant-numeric: tabular-nums;
 }
 
 .cat-empty-hint {
@@ -461,7 +463,8 @@
 
 .btn-cat-action {
   flex: 1;
-  padding: 6px 10px;
+  min-height: 44px;
+  padding: 10px 12px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -474,7 +477,7 @@
   gap: 4px;
 }
 
-.btn-cat-action:hover {
+.btn-cat-action:active {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
@@ -633,7 +636,7 @@
   justify-content: center;
 }
 
-.btn-close:hover {
+.btn-close:active {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
 }
@@ -716,13 +719,17 @@
 }
 
 .cat-pill {
-  padding: 6px 4px;
+  padding: 10px 8px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   font-size: 0.72rem;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cat-pill.selected {
@@ -737,13 +744,16 @@
 }
 
 .method-pill {
-  padding: 4px 8px;
+  padding: 10px 14px;
+  min-height: 44px;
   border-radius: var(--radius-full);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
 }
 
 .method-pill.selected {
@@ -969,10 +979,15 @@
 
 .btn-remove-item {
   color: var(--text-tertiary);
-  padding: 4px;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-remove-item:hover {
+.btn-remove-item:active {
   color: var(--macro-fat);
 }
 
@@ -994,11 +1009,11 @@
 }
 
 .btn-step {
-  width: 22px;
-  height: 22px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.08);
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--text-primary);
   display: flex;
@@ -1219,21 +1234,21 @@
    6. SCREENS SPACING (AVOID DOCK OVERLAP)
    ========================================= */
 .profile-screen {
-  padding: 16px 18px 140px 18px;
+  padding: 16px 18px var(--bottom-safe-padding) 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
 .fav-screen {
-  padding: 16px 18px 140px 18px;
+  padding: 16px 18px var(--bottom-safe-padding) 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
 .swipe-idle-screen {
-  padding: 40px 20px 140px 20px;
+  padding: 40px 20px var(--bottom-safe-padding) 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1282,7 +1297,7 @@
   transition: transform var(--duration-fast);
 }
 
-.btn-start-swipe:hover {
-  transform: translateY(-1px);
+.btn-start-swipe:active {
+  transform: scale(0.97);
 }
 
