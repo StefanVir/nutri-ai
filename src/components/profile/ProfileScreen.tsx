@@ -144,6 +144,7 @@ export function ProfileScreen({
           display: flex;
           flex-direction: column;
           gap: 16px;
+          padding: 20px 20px var(--bottom-safe-padding) 20px;
         }
 
         .profile-hero {

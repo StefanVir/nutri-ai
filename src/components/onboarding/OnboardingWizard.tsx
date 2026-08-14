@@ -363,7 +363,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
       <style jsx>{`
         .onboarding-card {
-          padding: 8px 4px;
+          padding: 20px 20px var(--bottom-safe-padding) 20px;
           display: flex;
           flex-direction: column;
           gap: 20px;

@@ -271,8 +271,9 @@ export function SwipeDeck({
           display: flex;
           flex-direction: column;
           gap: 12px;
-          height: calc(100vh - 160px);
-          max-height: 580px;
+          padding-top: max(16px, env(safe-area-inset-top, 16px));
+          height: calc(100vh - 140px);
+          max-height: 600px;
         }
 
         .deck-header {

@@ -404,13 +404,16 @@ export default function Home() {
         .dashboard-view, .swipe-tab-view, .quick-log-tab-view {
           display: flex;
           flex-direction: column;
+          padding: 0 20px var(--bottom-safe-padding) 20px;
         }
 
         .top-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 16px;
+          padding-top: max(20px, env(safe-area-inset-top, 20px));
+          padding-bottom: 8px;
+          margin-bottom: 14px;
         }
 
         .user-greeting {
@@ -419,7 +422,7 @@ export default function Home() {
         }
 
         .greeting-label {
-          font-size: 0.65rem;
+          font-size: 0.68rem;
           font-weight: 800;
           letter-spacing: 0.06em;
           color: var(--text-tertiary);
@@ -455,11 +458,11 @@ export default function Home() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 14px 16px;
+          padding: 16px 18px;
           background: linear-gradient(145deg, #18243c 0%, #0f1626 100%);
           border: 1px solid rgba(245, 158, 11, 0.3);
           border-radius: var(--radius-lg);
-          margin-bottom: 18px;
+          margin-bottom: 16px;
           cursor: pointer;
           transition: all var(--duration-fast);
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
