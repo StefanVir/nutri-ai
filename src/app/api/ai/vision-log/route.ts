@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeFoodImageWithNIM } from '@/lib/nimClient';
+import { CookingMethod } from '@/lib/nutritionDb';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -9,6 +10,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const imageBase64 = body?.imageBase64;
     const userHint = body?.userHint;
+    const cookingMethod: CookingMethod = body?.cookingMethod || 'dry_grill';
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json(
@@ -17,7 +19,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await analyzeFoodImageWithNIM(imageBase64, userHint);
+    const result = await analyzeFoodImageWithNIM(imageBase64, userHint, cookingMethod);
     return NextResponse.json({
       success: true,
       ...result,

@@ -101,6 +101,16 @@ graph TD
   3. **Iconografie Unitară:** Exclusiv iconițe SVG din `lucide-react`, fără emoji-uri ca substitute de iconițe.
   4. **Contraste WCAG AA:** Toate culorile de text și suprafețe respectă raportul de contrast `>= 4.5:1` (text normal) și `>= 3:1` (text mare/badge-uri).
 
+### `AD-07` [Industry-Standard Vision & USDA FoodData Grounding Pipeline]
+* **Binds:** Toate modulele de scanare foto, recunoaștere a meselor și logare nutrițională (`nutritionDb.ts`, `QuickLogModal.tsx`).
+* **Prevents:** Halucinații aleatoare de calorii din LLM, erori de estimare pe poze 2D și ignorarea caloriilor ascunse din grăsimi de gătit.
+* **Rule:**
+  1. **Dual-Stage Architecture:** LLM-ul Vision (`meta/llama-3.2-11b-vision-instruct`) are rol strict de **segmentare semantică și raționament dimensional 3D**.
+  2. **Authoritative Grounding:** Fiecare aliment detectat este interogat automat în baza de date nutrițională etalon (`nutritionDb.ts`) pentru profilul chimic la 100g.
+  3. **Cooking Method & Hidden Fat Engine:** Utilizatorul selectează metoda de preparare (*Grătar*, *Airfryer*, *Tigaie cu Ulei +110 kcal*, *Prăjit în baie de ulei +220 kcal*), iar offset-ul caloric este adăugat matematic.
+  4. **Human-in-the-Loop UX:** Utilizatorul primește slidere de reglare fină a gramajului (+/- 10g) cu recalculare în timp real la 60 FPS înainte de salvare.
+
+
 ---
 
 ## 3. Data Contracts & Zod Schemas (`src/lib/schemas.ts`)
