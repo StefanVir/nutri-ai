@@ -380,16 +380,15 @@ export default function Home() {
           onLaunch={handleLaunchSwipe}
         />
 
-        {detailRecipe && (
-          <RecipeBottomSheet
-            recipe={detailRecipe}
-            onClose={() => setDetailRecipe(null)}
-            onCookAndLog={(rec) => {
-              handleCookAndLogFromSheet(rec);
-              setDetailRecipe(null);
-            }}
-          />
-        )}
+        <RecipeBottomSheet
+          recipe={detailRecipe}
+          isOpen={!!detailRecipe}
+          onClose={() => setDetailRecipe(null)}
+          onCookAndLog={(rec) => {
+            handleCookAndLogFromSheet(rec);
+            setDetailRecipe(null);
+          }}
+        />
       </div>
 
       <style jsx>{`
