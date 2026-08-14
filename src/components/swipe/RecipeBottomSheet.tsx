@@ -57,7 +57,11 @@ export function RecipeBottomSheet({
         )}
 
         <h2 className="recipe-full-title">{recipe.title}</h2>
-        <p className="recipe-match-desc">{recipe.matchReason}</p>
+        <p className="recipe-match-desc">
+          {recipe.matchReason && !recipe.matchReason.toLowerCase().startsWith('explică')
+            ? recipe.matchReason
+            : 'Optimizat pentru aport proteic ridicat și sațietate metabolică.'}
+        </p>
 
         {/* Macro Strip */}
         <div className="sheet-macros-grid">

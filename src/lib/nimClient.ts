@@ -70,58 +70,89 @@ export async function generateNIMMealDeck(context: PreSwipeContext): Promise<Mea
     ? context.appliances.join(', ')
     : 'Bucătărie standard (aragaz/cuptor/airfryer)';
 
-  const systemPrompt = `You are an elite sports nutrition chef for NutriAI.
-You create tailored single-meal recipes in Romanian based STRICTLY on the user's specific inputs:
-- Ingredients provided: [${ingredientsListStr}]
-- Appliances available: [${appliancesStr}]
+  const systemPrompt = `You are a Master Executive Chef & Sports Nutritionist for NutriAI.
+You create 3 DISTINCT, CULINARILY COHERENT, and DELICIOUS single-meal recipes in Romanian based on the user's available pantry:
+- Available ingredients: [${ingredientsListStr}]
+- Available appliances: [${appliancesStr}]
 - Mode: ${context.mode}
 - TARGET MEAL SLOT: ~${mealSlot.targetCalories} kcal (Range: ${mealSlot.minCalories}-${mealSlot.maxCalories} kcal), ~${mealSlot.targetProtein}g Protein, ~${mealSlot.targetCarbs}g Carbs, ~${mealSlot.targetFat}g Fat.
 
-CRITICAL INVARIANTS:
-1. Every generated recipe MUST prioritize and incorporate the specific ingredients provided by the user (${ingredientsListStr}).
-2. Use REALISTIC SINGLE-SERVING gram amounts (e.g., 150-220g meat/fish, 120-180g cooked carbs, 80-120g veggies, 5-15ml oil).
-3. The sum of ingredient calories MUST naturally match the single meal target (~${mealSlot.targetCalories} kcal). DO NOT output the full day's calorie budget (2000+ kcal) for a single dish!
-4. The response MUST be ONLY valid JSON matching this schema:
+STRICT CULINARY RULES (MANDATORY):
+1. CULINARY COHERENCE & PROTEIN ISOLATION:
+   - NEVER combine incompatible proteins in one dish (DO NOT mix Beef + Tuna + Eggs together into a bizarre mashup!).
+   - Instead, create 3 DIFFERENT recipes, each choosing ONE primary hero ingredient + logical sides from the user's list:
+     • Recipe 1: Beef / Meat dish (e.g. Mușchi de vită la tigaie cu spanac sote și orez)
+     • Recipe 2: Fish / Seafood dish (e.g. Salată bogată de ton cu avocado și verdețuri)
+     • Recipe 3: Egg / Light dish (e.g. Omletă cremoasă cu spanac și felii de avocado)
+2. REALISTIC PROFESSIONAL COOKING INSTRUCTIONS:
+   - Provide 3 to 4 clear, logical culinary steps using authentic Romanian cooking verbs:
+     • Step 1 (Prep): "Scoate mușchiul de vită din frigider cu 10 minute înainte și asezonează-l cu sare și piper." / "Scurge bine conserva de ton."
+     • Step 2 (Cook): "Încinge tigaia antiaderentă cu 1 linguriță de ulei la foc mediu spre iute și gătește carnea timp de 3-4 minute pe fiecare parte."
+     • Step 3 (Sides/Season): "Adaugă spanacul în ultimele 2 minute și trage-l la tigaie până scade în volum."
+     • Step 4 (Plating): "Așază preparatul pe farfurie, stropește cu puțin suc de lămâie și servește cald."
+   - STRICTLY FORBIDDEN: NEVER use AI slop phrases like "Sărbătorește cu o bucătărie delicioasă", "Bucură-te de o masă", or template placeholder text.
+3. REAL NUTRITIONAL MATCH REASON:
+   - Write a real 1-sentence explanation of why the dish works (e.g. "Proteine de înaltă calitate cu eliberare rapidă și grăsimi sănătoase din avocado pentru sațietate prelungită.").
+4. PORTIONS:
+   - Use realistic single-serving weights (150-200g meat/fish, 100-160g carbs, 80-120g veggies, 5-10ml oil). Target: ~${mealSlot.targetCalories} kcal.
+
+The response MUST be ONLY valid JSON matching this schema:
 {
   "recipes": [
     {
       "id": "rec-1",
-      "title": "Titlu preparat specific în Română",
+      "title": "Mușchi de vită la tigaie cu spanac sote",
       "mode": "${context.mode}",
       "calories": ${mealSlot.targetCalories},
       "protein": ${mealSlot.targetProtein},
       "carbs": ${mealSlot.targetCarbs},
       "fat": ${mealSlot.targetFat},
-      "prepTimeMinutes": 10,
-      "cookTimeMinutes": 15,
+      "prepTimeMinutes": 8,
+      "cookTimeMinutes": 12,
       "difficulty": "Ușor",
       "servings": ${context.servings || 1},
       "appliancesUsed": ["${context.appliances[0] || 'Aragaz / Tigaie'}"],
-      "estimatedCostRon": ${context.maxBudgetRon ? Math.min(context.maxBudgetRon, 25) : 18},
-      "matchReason": "Explică de ce preparatul valorifică ${context.fridgeIngredients.slice(0, 2).join(', ') || 'ingredientele tale'} și deficitul caloric.",
+      "estimatedCostRon": ${context.maxBudgetRon ? Math.min(context.maxBudgetRon, 25) : 20},
+      "matchReason": "Aport generos de fier și proteine complete din carnea de vită, asociat cu micronutrienții din spanac.",
       "tags": ["High Protein", "${context.appliances[0] || 'Rapid'}"],
       "ingredients": [
         {
-          "name": "Nume ingredient",
+          "name": "Mușchi de vită",
           "amount": "180g",
+          "isPantryStock": true,
+          "toBuy": false,
+          "estimatedPriceRon": 0
+        },
+        {
+          "name": "Spanac",
+          "amount": "120g",
+          "isPantryStock": true,
+          "toBuy": false,
+          "estimatedPriceRon": 0
+        },
+        {
+          "name": "Ulei de măsline",
+          "amount": "10ml",
           "isPantryStock": true,
           "toBuy": false,
           "estimatedPriceRon": 0
         }
       ],
       "instructions": [
-        "Pasul 1...",
-        "Pasul 2...",
-        "Pasul 3..."
+        "Scoate mușchiul de vită din frigider cu 10 minute înainte și asezonează-l cu sare și piper.",
+        "Încinge tigaia la foc iute cu uleiul de măsline și gătește carnea timp de 3 minute pe fiecare parte.",
+        "Adaugă spanacul în aceeași tigaie în ultimele 2 minute până scade în volum.",
+        "Așază carnea pe farfurie, las-o să se odihnească 2 minute, apoi servește alături de spanac."
       ]
     }
   ]
 }`;
 
-  const userPrompt = `Generează 3 rețete variate și delicioase folosind în mod expres aceste ingrediente disponibile: ${ingredientsListStr}.
-Echipamente: ${appliancesStr}.
-Mod gătire: ${context.mode} (${context.mode === 'fridge' ? 'Folosește ce am în frigider' : context.mode === 'grocery_empty' ? `Buget total: ${context.maxBudgetRon || 30} RON` : 'Smart Grocery / Restaurant'}).
-Țintă pentru această masă (${context.mealCategory}): ~${mealSlot.targetCalories} kcal, ~${mealSlot.targetProtein}g Proteine, ~${mealSlot.targetCarbs}g Carbohidrați, ~${mealSlot.targetFat}g Grăsimi.`;
+  const userPrompt = `Ingrediente disponibile în bucătărie: ${ingredientsListStr}.
+Echipamente disponibile: ${appliancesStr}.
+Mod: ${context.mode}.
+Țintă nutrițională pentru această masă (${context.mealCategory}): ~${mealSlot.targetCalories} kcal, ~${mealSlot.targetProtein}g Proteine.
+Creează 3 rețete gourmet variate, logice și delicioase.`;
 
   // Try fast 8B model first, fallback to high capacity model
   const modelsToTry = [FAST_DECK_MODEL, HIGH_CAPACITY_MODEL];
@@ -134,7 +165,7 @@ Mod gătire: ${context.mode} (${context.mode === 'fridge' ? 'Folosește ce am î
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        temperature: 0.35,
+        temperature: 0.3,
         max_tokens: 1800,
       });
 
@@ -146,8 +177,24 @@ Mod gătire: ${context.mode} (${context.mode === 'fridge' ? 'Folosește ce am î
 
       if (parsed.success && parsed.data.recipes.length > 0) {
         return parsed.data.recipes.map((rec) => {
+          // Clean any leftover placeholder or slop text in matchReason
+          const cleanMatchReason = rec.matchReason && !rec.matchReason.toLowerCase().startsWith('explică')
+            ? rec.matchReason
+            : 'Optimizat pentru aport proteic ridicat și sațietate metabolică.';
+
+          // Filter out generic slop lines from instructions
+          const cleanInstructions = rec.instructions
+            .filter((step) => !step.toLowerCase().includes('sărbătorește') && !step.toLowerCase().includes('bucură-te'))
+            .map((step) => step.trim());
+
+          const cleanedRecipe = {
+            ...rec,
+            matchReason: cleanMatchReason,
+            instructions: cleanInstructions.length > 0 ? cleanInstructions : rec.instructions,
+          };
+
           // Tier 3: Deterministic Bottom-Up Ingredient Aggregator
-          const grounded = recalculateAndGroundMeal(rec, mealSlot.targetCalories);
+          const grounded = recalculateAndGroundMeal(cleanedRecipe, mealSlot.targetCalories);
           return {
             ...grounded,
             imageUrl: grounded.imageUrl || resolveMealImageUrl(grounded.title, grounded.ingredients, grounded.tags),
