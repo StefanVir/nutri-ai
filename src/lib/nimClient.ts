@@ -241,7 +241,7 @@ Analyze each component accurately and output strictly valid JSON in Romanian adh
 
   try {
     const completion = await client.chat.completions.create({
-      model: 'meta/llama-3.2-90b-vision-instruct',
+      model: 'meta/llama-3.2-11b-vision-instruct',
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -253,7 +253,7 @@ Analyze each component accurately and output strictly valid JSON in Romanian adh
         },
       ],
       temperature: 0.2,
-      max_tokens: 1200,
+      max_tokens: 600,
     });
 
     const content = completion.choices[0]?.message?.content;

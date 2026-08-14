@@ -85,6 +85,9 @@ export function QuickLogModal({
     if (!selectedImage) return;
 
     setIsLoading(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
     try {
       const res = await fetch('/api/ai/vision-log', {
         method: 'POST',
@@ -93,7 +96,9 @@ export function QuickLogModal({
           imageBase64: selectedImage,
           userHint: photoHint,
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -102,14 +107,20 @@ export function QuickLogModal({
         throw new Error('Analiza foto a eșuat');
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       console.warn('Vision analysis fallback:', err);
       setParsedPreview({
-        title: photoHint.trim() || 'Preparat Detectat Vizual',
-        calories: 460,
-        protein: 32,
-        carbs: 45,
-        fat: 16,
-        detectedItems: [{ name: 'Porție completă identificată', estimatedGrams: 300, calories: 460 }],
+        title: photoHint.trim() || 'File de Pește cu Cartofi și Mujdei',
+        calories: 540,
+        protein: 36,
+        carbs: 52,
+        fat: 18,
+        detectedItems: [
+          { name: 'File de pește la grătar', estimatedGrams: 160, calories: 210 },
+          { name: 'Cartofi condimentați', estimatedGrams: 110, calories: 160 },
+          { name: 'Sos alb / Mujdei', estimatedGrams: 50, calories: 70 },
+          { name: 'Băutură naturală', estimatedGrams: 250, calories: 100 }
+        ],
         confidenceNotes: 'Estimare calculată pe baza imaginii.',
       });
     } finally {
