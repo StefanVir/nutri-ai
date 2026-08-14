@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 export const IngredientItemSchema = z.object({
   name: z.string().min(1),
@@ -41,7 +41,25 @@ export const QuickLogOutputSchema = z.object({
   confidenceNotes: z.string().optional().default(''),
 });
 
+export const VisionMealOutputSchema = z.object({
+  title: z.string().min(2),
+  calories: z.number().int().positive(),
+  protein: z.number().nonnegative(),
+  carbs: z.number().nonnegative(),
+  fat: z.number().nonnegative(),
+  detectedItems: z.array(
+    z.object({
+      name: z.string(),
+      estimatedGrams: z.number().nonnegative().optional(),
+      calories: z.number().nonnegative().optional(),
+    })
+  ).default([]),
+  confidenceNotes: z.string().default(''),
+});
+
 export type IngredientItem = z.infer<typeof IngredientItemSchema>;
 export type MealCardProposal = z.infer<typeof MealCardProposalSchema>;
 export type MealCardDeck = z.infer<typeof MealCardDeckSchema>;
 export type QuickLogOutput = z.infer<typeof QuickLogOutputSchema>;
+export type VisionMealOutput = z.infer<typeof VisionMealOutputSchema>;
+
