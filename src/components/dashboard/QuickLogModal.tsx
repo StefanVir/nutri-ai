@@ -37,7 +37,19 @@ export function QuickLogModal({
     protein: number;
     carbs: number;
     fat: number;
-    detectedItems?: { name: string; estimatedGrams?: number; calories?: number }[];
+    spatialReasoning?: {
+      scaleAnchor: string;
+      calculationNotes: string;
+    };
+    detectedItems?: {
+      name: string;
+      dimensionsEstimate?: string;
+      estimatedGrams?: number;
+      calories?: number;
+      protein?: number;
+      carbs?: number;
+      fat?: number;
+    }[];
     confidenceNotes?: string;
   } | null>(null);
 
