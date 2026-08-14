@@ -48,6 +48,14 @@ export function RecipeBottomSheet({
           </button>
         </div>
 
+        {/* Recipe Photo Cover */}
+        {recipe.imageUrl && (
+          <div className="sheet-recipe-hero">
+            <img src={recipe.imageUrl} alt={recipe.title} className="sheet-hero-img" />
+            <div className="sheet-hero-gradient" />
+          </div>
+        )}
+
         <h2 className="recipe-full-title">{recipe.title}</h2>
         <p className="recipe-match-desc">{recipe.matchReason}</p>
 
@@ -201,6 +209,28 @@ export function RecipeBottomSheet({
             cursor: grab;
             user-select: none;
             touch-action: pan-y;
+          }
+
+          .sheet-recipe-hero {
+            position: relative;
+            width: 100%;
+            height: 140px;
+            overflow: hidden;
+            background: #0d121d;
+            flex-shrink: 0;
+          }
+
+          .sheet-hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+          }
+
+          .sheet-hero-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 30%, var(--bg-surface-raised) 100%);
           }
 
           .header-tags-row {

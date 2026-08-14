@@ -12,6 +12,7 @@ export const MealCardProposalSchema = z.object({
   id: z.string(),
   title: z.string().min(3),
   mode: z.enum(['fridge', 'grocery_empty', 'grocery_stock', 'restaurant']),
+  imageUrl: z.string().optional(),
   calories: z.number().int().positive(),
   protein: z.number().nonnegative(),
   carbs: z.number().nonnegative(),

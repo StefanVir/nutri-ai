@@ -1,4 +1,4 @@
-﻿export type Gender = 'male' | 'female';
+export type Gender = 'male' | 'female';
 export type Goal = 'cut' | 'maintain' | 'bulk';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'very_active';
 
@@ -28,6 +28,7 @@ export interface MealCardProposal {
   id: string;
   title: string;
   mode: SwipeMode;
+  imageUrl?: string;
   calories: number;
   protein: number;
   carbs: number;

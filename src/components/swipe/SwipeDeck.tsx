@@ -142,13 +142,23 @@ export function SwipeDeck({
         {/* Next Card Background Shadow */}
         {nextCard && (
           <div className="deck-card next-card">
-            <div className="card-inner">
+            <div className="card-photo-hero">
+              {nextCard.imageUrl ? (
+                <img src={nextCard.imageUrl} alt={nextCard.title} className="card-photo-img" />
+              ) : (
+                <div className="card-photo-fallback">
+                  <ChefHat size={32} />
+                </div>
+              )}
+              <div className="card-photo-gradient" />
               <div className="card-top-tags">
                 <span className="mode-badge">{nextCard.mode}</span>
                 <span className="card-time-pill">
                   <Clock size={13} /> {nextCard.prepTimeMinutes + nextCard.cookTimeMinutes}m
                 </span>
               </div>
+            </div>
+            <div className="card-inner">
               <h3 className="card-title">{nextCard.title}</h3>
             </div>
           </div>
@@ -173,16 +183,36 @@ export function SwipeDeck({
           {stamp === 'like' && <div className="stamp stamp-like">ACCEPTAT</div>}
           {stamp === 'skip' && <div className="stamp stamp-skip">URMĂTORUL</div>}
 
-          <div className="card-inner">
+          {/* Food Photo Hero Cover */}
+          <div className="card-photo-hero">
+            {currentCard.imageUrl ? (
+              <img
+                src={currentCard.imageUrl}
+                alt={currentCard.title}
+                className="card-photo-img"
+                draggable={false}
+              />
+            ) : (
+              <div className="card-photo-fallback">
+                <ChefHat size={36} />
+              </div>
+            )}
+            <div className="card-photo-gradient" />
             <div className="card-top-tags">
               <span className="mode-badge">
-                {currentCard.mode === 'fridge' ? 'Din Frigider' : currentCard.mode === 'grocery_empty' ? 'Buget Fix' : 'Smart Grocery'}
+                {currentCard.mode === 'fridge'
+                  ? 'Din Frigider'
+                  : currentCard.mode === 'grocery_empty'
+                  ? 'Buget Fix'
+                  : 'Smart Grocery'}
               </span>
               <span className="card-time-pill">
                 <Clock size={13} /> {currentCard.prepTimeMinutes + currentCard.cookTimeMinutes} min
               </span>
             </div>
+          </div>
 
+          <div className="card-inner">
             <h3 className="card-title">{currentCard.title}</h3>
 
             <div className="match-reason-box">
@@ -366,11 +396,81 @@ export function SwipeDeck({
           transform: rotate(-14deg);
         }
 
+        .card-photo-hero {
+          position: relative;
+          width: 100%;
+          height: 165px;
+          overflow: hidden;
+          background: #0d121d;
+          flex-shrink: 0;
+        }
+
+        .card-photo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          user-select: none;
+          pointer-events: none;
+          transition: transform 0.3s var(--ease-out-smooth);
+        }
+
+        .card-photo-fallback {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #18243c 0%, #0e1524 100%);
+          color: var(--macro-calories);
+        }
+
+        .card-photo-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(7, 9, 14, 0.45) 0%,
+            transparent 45%,
+            rgba(13, 19, 34, 0.95) 100%
+          );
+          pointer-events: none;
+        }
+
+        .card-photo-hero .card-top-tags {
+          position: absolute;
+          top: 12px;
+          left: 14px;
+          right: 14px;
+          margin-bottom: 0;
+          z-index: 3;
+        }
+
+        .card-photo-hero .mode-badge {
+          background: rgba(7, 9, 14, 0.75);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-photo-hero .card-time-pill {
+          background: rgba(7, 9, 14, 0.75);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          padding: 4px 10px;
+          border-radius: var(--radius-full);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+          color: var(--text-primary);
+        }
+
         .card-inner {
           display: flex;
           flex-direction: column;
-          height: 100%;
-          padding: 18px 18px 14px 18px;
+          flex: 1;
+          padding: 12px 16px 12px 16px;
+          overflow-y: auto;
         }
 
         .card-top-tags {

@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { PreSwipeContext, MealCardProposal } from '@/types/nutrition';
 import { MealCardDeckSchema, QuickLogOutputSchema, QuickLogOutput } from './schemas';
 import { filterOrGenerateRecipes } from './mockRecipes';
+import { resolveMealImageUrl } from './foodImages';
 
 // NVIDIA NIM OpenAI-Compatible Endpoint
 const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
@@ -119,7 +120,10 @@ Generează 3-4 opțiuni de mese gustoase, diversificate și realiste în limba R
     const parsed = MealCardDeckSchema.safeParse(rawJson);
 
     if (parsed.success && parsed.data.recipes.length > 0) {
-      return parsed.data.recipes as MealCardProposal[];
+      return parsed.data.recipes.map((rec) => ({
+        ...rec,
+        imageUrl: rec.imageUrl || resolveMealImageUrl(rec.title, rec.ingredients, rec.tags),
+      })) as MealCardProposal[];
     } else {
       return filterOrGenerateRecipes(context);
     }

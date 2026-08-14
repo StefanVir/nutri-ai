@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { MealCardProposal } from '@/types/nutrition';
@@ -42,53 +42,62 @@ export function MatchupShowdown({
       <div className="showdown-cards-list">
         {shortlistedMeals.map((recipe, index) => (
           <div key={recipe.id} className="showdown-card animate-slide-up" style={{ animationDelay: `${index * 80}ms` }}>
-            <div className="card-top-row">
-              <span className="candidate-index">Opțiunea #{index + 1}</span>
-              <div className="time-badge">
-                <Clock size={12} />
-                <span className="tabular-num">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
+            {recipe.imageUrl && (
+              <div className="showdown-photo-hero">
+                <img src={recipe.imageUrl} alt={recipe.title} className="showdown-photo-img" />
+                <div className="showdown-photo-gradient" />
               </div>
-            </div>
+            )}
 
-            <h4 className="recipe-name">{recipe.title}</h4>
-            <p className="match-rationale">{recipe.matchReason}</p>
-
-            {/* Quick Metrics Bar */}
-            <div className="metrics-compare-row">
-              <div className="mini-metric cal-metric">
-                <Flame size={13} />
-                <span className="tabular-num"><strong>{recipe.calories}</strong> kcal</span>
-              </div>
-              <div className="mini-metric prot-metric">
-                <Dumbbell size={13} />
-                <span className="tabular-num"><strong>{recipe.protein}g</strong> P</span>
-              </div>
-              {recipe.estimatedCostRon && (
-                <div className="mini-metric cost-metric">
-                  <span className="tabular-num">~{recipe.estimatedCostRon} RON</span>
+            <div className="showdown-card-body">
+              <div className="card-top-row">
+                <span className="candidate-index">Opțiunea #{index + 1}</span>
+                <div className="time-badge">
+                  <Clock size={12} />
+                  <span className="tabular-num">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Actions */}
-            <div className="card-actions-row">
-              <button
-                type="button"
-                className="btn-inspect"
-                onClick={() => onOpenDetails(recipe)}
-              >
-                <Eye size={15} />
-                <span>Vezi Rețeta</span>
-              </button>
+              <h4 className="recipe-name">{recipe.title}</h4>
+              <p className="match-rationale">{recipe.matchReason}</p>
 
-              <button
-                type="button"
-                className="btn-select-winner"
-                onClick={() => handlePick(recipe)}
-              >
-                <Check size={16} />
-                <span>Gătește Această Masă</span>
-              </button>
+              {/* Quick Metrics Bar */}
+              <div className="metrics-compare-row">
+                <div className="mini-metric cal-metric">
+                  <Flame size={13} />
+                  <span className="tabular-num"><strong>{recipe.calories}</strong> kcal</span>
+                </div>
+                <div className="mini-metric prot-metric">
+                  <Dumbbell size={13} />
+                  <span className="tabular-num"><strong>{recipe.protein}g</strong> P</span>
+                </div>
+                {recipe.estimatedCostRon && (
+                  <div className="mini-metric cost-metric">
+                    <span className="tabular-num">~{recipe.estimatedCostRon} RON</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="card-actions-row">
+                <button
+                  type="button"
+                  className="btn-inspect"
+                  onClick={() => onOpenDetails(recipe)}
+                >
+                  <Eye size={15} />
+                  <span>Vezi Rețeta</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-select-winner"
+                  onClick={() => handlePick(recipe)}
+                >
+                  <Check size={16} />
+                  <span>Gătește Această Masă</span>
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -160,14 +169,39 @@ export function MatchupShowdown({
           background: linear-gradient(150deg, #18233b 0%, #101726 100%);
           border: 1px solid var(--border-medium);
           border-radius: var(--radius-lg);
-          padding: 16px;
+          overflow: hidden;
           box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
           transition: all var(--duration-fast);
         }
 
-        .showdown-card:hover {
+        .showdown-card:active {
           border-color: var(--macro-protein);
-          transform: translateY(-2px);
+          transform: scale(0.99);
+        }
+
+        .showdown-photo-hero {
+          position: relative;
+          width: 100%;
+          height: 120px;
+          overflow: hidden;
+          background: #0d121d;
+        }
+
+        .showdown-photo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .showdown-photo-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, transparent 30%, rgba(16, 23, 38, 0.95) 100%);
+        }
+
+        .showdown-card-body {
+          padding: 14px 16px 16px 16px;
         }
 
         .card-top-row {

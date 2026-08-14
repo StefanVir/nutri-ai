@@ -55,26 +55,33 @@ export function AdaptiveFavoritesModal({
         ) : (
           favorites.map((recipe) => (
             <div key={recipe.id} className="fav-card animate-slide-up">
-              <div className="fav-card-top">
-                <strong className="fav-card-title">{recipe.title}</strong>
-                <button
-                  type="button"
-                  className="btn-del-fav"
-                  onClick={() => onRemoveFavorite(recipe.id)}
-                  aria-label="Șterge din favorite"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
+              <div className="fav-card-content">
+                {recipe.imageUrl && (
+                  <img src={recipe.imageUrl} alt={recipe.title} className="fav-thumb-img" />
+                )}
+                <div className="fav-details-col">
+                  <div className="fav-card-top">
+                    <strong className="fav-card-title">{recipe.title}</strong>
+                    <button
+                      type="button"
+                      className="btn-del-fav"
+                      onClick={() => onRemoveFavorite(recipe.id)}
+                      aria-label="Șterge din favorite"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
 
-              <div className="fav-meta-row">
-                <div className="fav-time">
-                  <Clock size={12} />
-                  <span className="tabular-num">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
-                </div>
-                <div className="fav-macros">
-                  <span className="fav-cal tabular-num">{recipe.calories} kcal</span>
-                  <span className="fav-prot tabular-num">{recipe.protein}g P</span>
+                  <div className="fav-meta-row">
+                    <div className="fav-time">
+                      <Clock size={12} />
+                      <span className="tabular-num">{recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span>
+                    </div>
+                    <div className="fav-macros">
+                      <span className="fav-cal tabular-num">{recipe.calories} kcal</span>
+                      <span className="fav-prot tabular-num">{recipe.protein}g P</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -209,7 +216,29 @@ export function AdaptiveFavoritesModal({
           padding: 14px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
+        }
+
+        .fav-card-content {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .fav-thumb-img {
+          width: 56px;
+          height: 56px;
+          border-radius: var(--radius-sm);
+          object-fit: cover;
+          flex-shrink: 0;
+          border: 1px solid var(--border-subtle);
+        }
+
+        .fav-details-col {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          gap: 6px;
         }
 
         .fav-card-top {
