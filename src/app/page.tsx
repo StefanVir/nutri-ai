@@ -303,6 +303,7 @@ export default function Home() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    id="btn-open-grocery-list"
                     className="btn-header-grocery"
                     onClick={() => setIsGroceryModalOpen(true)}
                     aria-label="Deschide lista de cumpărături"
@@ -498,17 +499,17 @@ export default function Home() {
           onAddIngredientsToGrocery={handleAddIngredientsToGrocery}
         />
 
-        {isGroceryModalOpen && (
-          <GroceryListModal
-            items={groceryItems}
-            onToggleItem={handleToggleGroceryItem}
-            onDeleteItem={handleDeleteGroceryItem}
-            onAddItem={handleAddGroceryItem}
-            onClearChecked={handleClearCheckedGrocery}
-            onClearAll={handleClearAllGrocery}
-            onClose={() => setIsGroceryModalOpen(false)}
-          />
-        )}
+        <GroceryListModal
+          isOpen={isGroceryModalOpen}
+          items={groceryItems}
+          onToggleItem={handleToggleGroceryItem}
+          onDeleteItem={handleDeleteGroceryItem}
+          onAddItem={handleAddGroceryItem}
+          onClearChecked={handleClearCheckedGrocery}
+          onClearAll={handleClearAllGrocery}
+          onClose={() => setIsGroceryModalOpen(false)}
+        />
+
 
 
 

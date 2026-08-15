@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { GroceryCategory, GroceryItem } from '@/types/nutrition';
 import { GROCERY_CATEGORIES, classifyIngredient, formatGroceryListForExport } from '@/lib/groceryClassifier';
+import { useSwipeDownSheet } from '@/lib/useSwipeDownSheet';
 import {
   ShoppingCart,
   Check,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 interface GroceryListModalProps {
+  isOpen?: boolean;
   items: GroceryItem[];
   onToggleItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
@@ -30,6 +32,7 @@ interface GroceryListModalProps {
 type FilterTab = 'all' | 'uncompleted' | 'completed';
 
 export function GroceryListModal({
+  isOpen = true,
   items,
   onToggleItem,
   onDeleteItem,
@@ -41,6 +44,14 @@ export function GroceryListModal({
   const [filter, setFilter] = useState<FilterTab>('uncompleted');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
+    onClose,
+    isOpen: isOpen,
+  });
+
+  if (isOpen === false) return null;
+
 
   // Quick Add state
   const [newItemName, setNewItemName] = useState('');
@@ -126,18 +137,20 @@ export function GroceryListModal({
   const categoriesOrder: GroceryCategory[] = ['produce', 'protein', 'dairy', 'bakery', 'pantry', 'other'];
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="grocery-modal-backdrop animate-fade-in" onClick={onClose} style={backdropStyle}>
       <div
-        className="sheet-container grocery-modal-container animate-slide-up"
+        className="grocery-modal-sheet animate-slide-up"
         onClick={(e) => e.stopPropagation()}
+        style={sheetStyle}
       >
-        {/* Grab Handle */}
-        <div className="sheet-handle-wrap">
-          <div className="sheet-handle" />
+        {/* Grab Handle Touch Zone */}
+        <div className="grocery-drag-handle-touch-zone" {...dragProps}>
+          <div className="grocery-drag-handle" />
         </div>
 
         {/* Modal Header */}
-        <div className="grocery-header">
+        <div className="grocery-header" {...dragProps}>
+
           <div className="grocery-header-title-wrap">
             <div className="grocery-icon-badge">
               <ShoppingCart size={18} />
@@ -165,7 +178,7 @@ export function GroceryListModal({
         )}
 
         {/* Scrollable Content */}
-        <div className="grocery-content-scroll">
+        <div className="grocery-content-scroll" ref={scrollRef}>
           {/* Metrics Card */}
           <div className="grocery-metrics-card">
             <div className="metrics-row-top">
