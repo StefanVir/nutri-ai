@@ -16,9 +16,12 @@ import { AdaptiveFavoritesModal } from '@/components/favorites/AdaptiveFavorites
 import { GroceryListModal } from '@/components/grocery/GroceryListModal';
 import { filterOrGenerateRecipes } from '@/lib/mockRecipes';
 import { classifyIngredient } from '@/lib/groceryClassifier';
+import { NutriLogo } from '@/components/ui/Logo';
+
 import { Sparkles, ArrowRight, ShoppingCart } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY_PROFILE = 'nutri_ai_user_profile';
+
 const LOCAL_STORAGE_KEY_MEALS = 'nutri_ai_logged_meals';
 const LOCAL_STORAGE_KEY_FAVS = 'nutri_ai_adaptive_favs';
 const LOCAL_STORAGE_KEY_GROCERY = 'nutri_ai_grocery_list';
@@ -295,10 +298,14 @@ export default function Home() {
           {currentTab === 'dashboard' && (
             <div className="dashboard-view animate-fade-in">
               <div className="top-header">
-                <div className="user-greeting">
-                  <span className="greeting-label">Astăzi, {new Date().toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
-                  <h1 className="greeting-name">Salut, {profile.name || 'Alex'}</h1>
+                <div className="flex items-center gap-3">
+                  <NutriLogo size={38} />
+                  <div className="user-greeting">
+                    <span className="greeting-label">Astăzi, {new Date().toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+                    <h1 className="greeting-name">Salut, {profile.name || 'Alex'}</h1>
+                  </div>
                 </div>
+
 
                 <div className="flex items-center gap-2">
                   <button
