@@ -1,7 +1,28 @@
 {
   "name": "nutri-ai",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "High-precision intelligent nutrition tracking & meal planning platform built with Next.js 15, React 19, TypeScript and tailored AI models.",
+  "author": "Stefan Vîrnav <https://github.com/StefanVir>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StefanVir/nutri-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/StefanVir/nutri-ai/issues"
+  },
+  "homepage": "https://github.com/StefanVir/nutri-ai#readme",
+  "keywords": [
+    "nutrition",
+    "meal-planner",
+    "nextjs",
+    "react19",
+    "typescript",
+    "ai",
+    "macro-tracking",
+    "tdee-calculator",
+    "grocery-list"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -1,8 +1,15 @@
 # NutriAI — Intelligent Nutrition & Meal Planning Platform
 
+[![CI](https://github.com/StefanVir/nutri-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/StefanVir/nutri-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-15.1-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
 A modern, high-precision nutrition tracking and meal planning web application built with **Next.js 15**, **React 19**, **TypeScript**, and **Tailored AI Gateways**. Designed with an **Obsidian Athletic Dark** aesthetic, gesture-driven bottom sheets, and zero-slop typography.
 
 ---
+
 
 ## 🌟 Key Features
 
