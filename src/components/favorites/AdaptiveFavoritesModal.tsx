@@ -2,13 +2,17 @@
 
 import React from 'react';
 import { MealCardProposal } from '@/types/nutrition';
-import { Bookmark, Clock, Eye, Trash2, Plus } from 'lucide-react';
+import { Bookmark, Clock, Eye, Trash2, Plus, ShoppingCart } from 'lucide-react';
 
 interface AdaptiveFavoritesModalProps {
   favorites: MealCardProposal[];
   onOpenDetails: (recipe: MealCardProposal) => void;
   onRemoveFavorite: (id: string) => void;
   onCookAndLog: (recipe: MealCardProposal) => void;
+  onAddIngredientsToGrocery?: (
+    ingredients: { name: string; amount: string; estimatedPriceRon?: number }[],
+    recipeTitle: string
+  ) => void;
   onClose: () => void;
   onStartSwipe?: () => void;
 }
@@ -18,9 +22,11 @@ export function AdaptiveFavoritesModal({
   onOpenDetails,
   onRemoveFavorite,
   onCookAndLog,
+  onAddIngredientsToGrocery,
   onClose,
   onStartSwipe,
 }: AdaptiveFavoritesModalProps) {
+
   return (
     <div className="fav-screen animate-fade-in">
       <div className="fav-header">
@@ -95,15 +101,37 @@ export function AdaptiveFavoritesModal({
                   <span>Vezi Rețeta</span>
                 </button>
 
+                {onAddIngredientsToGrocery && (
+                  <button
+                    type="button"
+                    className="btn-fav-grocery"
+                    onClick={() =>
+                      onAddIngredientsToGrocery(
+                        recipe.ingredients.map((ing) => ({
+                          name: ing.name,
+                          amount: ing.amount,
+                          estimatedPriceRon: ing.estimatedPriceRon,
+                        })),
+                        recipe.title
+                      )
+                    }
+                    title="Adaugă ingredientele în lista de cumpărături"
+                  >
+                    <ShoppingCart size={14} />
+                    <span>Cumpără</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   className="btn-fav-cook"
                   onClick={() => onCookAndLog(recipe)}
                 >
                   <Plus size={14} />
-                  <span>Gătește & Loghează</span>
+                  <span>Gătește</span>
                 </button>
               </div>
+
             </div>
           ))
         )}
@@ -316,6 +344,25 @@ export function AdaptiveFavoritesModal({
 
         .btn-fav-view:active {
           background: rgba(255, 255, 255, 0.1);
+          transform: scale(0.97);
+        }
+
+        .btn-fav-grocery {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 10px 14px;
+          min-height: 44px;
+          background: rgba(99, 102, 241, 0.15);
+          border: 1px solid rgba(99, 102, 241, 0.35);
+          border-radius: var(--radius-sm);
+          font-size: 0.74rem;
+          font-weight: 700;
+          color: #a5b4fc;
+        }
+
+        .btn-fav-grocery:active {
+          background: rgba(99, 102, 241, 0.25);
           transform: scale(0.97);
         }
 

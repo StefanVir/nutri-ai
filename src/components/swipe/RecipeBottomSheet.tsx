@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { MealCardProposal } from '@/types/nutrition';
-import { X, Clock, Check, Utensils, ListOrdered, Flame, Zap, CookingPot, Sparkles, ChefHat, Scale } from 'lucide-react';
+import { X, Clock, Check, Utensils, ListOrdered, Flame, Zap, CookingPot, Sparkles, ChefHat, Scale, ShoppingCart, CheckCheck } from 'lucide-react';
 import { evaluateDishFlavor } from '@/lib/flavorEngine';
 import { convertApplianceInstructions, ApplianceType } from '@/lib/applianceConverter';
 import { CookModeModal } from './CookModeModal';
@@ -13,6 +13,10 @@ interface RecipeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onCookAndLog?: (recipe: MealCardProposal) => void;
+  onAddIngredientsToGrocery?: (
+    ingredients: { name: string; amount: string; estimatedPriceRon?: number }[],
+    recipeTitle: string
+  ) => void;
 }
 
 export function RecipeBottomSheet({
@@ -20,10 +24,13 @@ export function RecipeBottomSheet({
   isOpen,
   onClose,
   onCookAndLog,
+  onAddIngredientsToGrocery,
 }: RecipeBottomSheetProps) {
   const [portionMultiplier, setPortionMultiplier] = useState<number>(1);
   const [selectedAppliance, setSelectedAppliance] = useState<ApplianceType>('Aragaz / Tigaie');
   const [isCookModeOpen, setIsCookModeOpen] = useState(false);
+  const [isAddedToGrocery, setIsAddedToGrocery] = useState(false);
+
 
   const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
     onClose,
@@ -71,7 +78,23 @@ export function RecipeBottomSheet({
     }),
   };
 
+  const handleAddAllToGrocery = () => {
+    if (onAddIngredientsToGrocery) {
+      onAddIngredientsToGrocery(
+        activeScaledRecipe.ingredients.map((ing) => ({
+          name: ing.name,
+          amount: ing.amount,
+          estimatedPriceRon: ing.estimatedPriceRon,
+        })),
+        activeScaledRecipe.title
+      );
+      setIsAddedToGrocery(true);
+      setTimeout(() => setIsAddedToGrocery(false), 3000);
+    }
+  };
+
   return (
+
     <>
       <div className="sheet-overlay animate-fade-in" onClick={onClose} style={backdropStyle}>
         <div className="sheet-panel animate-slide-up" onClick={(e) => e.stopPropagation()} style={sheetStyle}>
@@ -159,26 +182,6 @@ export function RecipeBottomSheet({
             </button>
           </div>
 
-          {/* Scaled Macro Strip */}
-          <div className="sheet-macros-grid">
-            <div className="macro-cell macro-cal">
-              <span className="cell-num tabular-num">{scaledCalories}</span>
-              <span className="cell-sub">kcal</span>
-            </div>
-            <div className="macro-cell macro-prot">
-              <span className="cell-num tabular-num">{scaledProtein}g</span>
-              <span className="cell-sub">Proteine</span>
-            </div>
-            <div className="macro-cell macro-carb">
-              <span className="cell-num tabular-num">{scaledCarbs}g</span>
-              <span className="cell-sub">Carbohidrați</span>
-            </div>
-            <div className="macro-cell macro-fat">
-              <span className="cell-num tabular-num">{scaledFat}g</span>
-              <span className="cell-sub">Grăsimi</span>
-            </div>
-          </div>
-
           {/* Scrollable Ingredients & Steps */}
           <div className="sheet-scroll-body" ref={scrollRef}>
             {/* Ingredients Section with Real-Time Portion Multiplier */}
@@ -223,6 +226,29 @@ export function RecipeBottomSheet({
                   </div>
                 ))}
               </div>
+
+              {/* Add to Grocery List Action */}
+              {onAddIngredientsToGrocery && (
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/80">
+                  <span className="text-xs text-slate-400">
+                    {activeScaledRecipe.ingredients.filter((i) => i.toBuy).length > 0
+                      ? `${activeScaledRecipe.ingredients.filter((i) => i.toBuy).length} ingrediente de cumpărat`
+                      : `${activeScaledRecipe.ingredients.length} ingrediente`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAddAllToGrocery}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                      isAddedToGrocery
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
+                    }`}
+                  >
+                    {isAddedToGrocery ? <CheckCheck size={14} /> : <ShoppingCart size={14} />}
+                    <span>{isAddedToGrocery ? 'Adăugat în Listă ✓' : 'Adaugă în Lista de Cumpărături'}</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Cooking Steps */}

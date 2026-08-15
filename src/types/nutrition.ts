@@ -104,3 +104,17 @@ export interface AdaptiveFavorite {
   timesSuggested: number;
   timesSelected: number;
 }
+
+export type GroceryCategory = 'produce' | 'protein' | 'dairy' | 'bakery' | 'pantry' | 'other';
+
+export interface GroceryItem {
+  id: string;
+  name: string;
+  amount: string;
+  category: GroceryCategory;
+  estimatedPriceRon?: number;
+  checked: boolean;
+  recipeSourceTitle?: string;
+  addedAt: string;
+}
+

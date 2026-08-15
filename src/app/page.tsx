@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserProfile, MealCardProposal, LoggedMeal, MealCategory, PreSwipeContext } from '@/types/nutrition';
+import { UserProfile, MealCardProposal, LoggedMeal, MealCategory, PreSwipeContext, GroceryItem } from '@/types/nutrition';
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard';
 import { MacroRings } from '@/components/dashboard/MacroRings';
 import { DailyJournal } from '@/components/dashboard/DailyJournal';
@@ -13,17 +13,21 @@ import { RecipeBottomSheet } from '@/components/swipe/RecipeBottomSheet';
 import { QuickLogModal } from '@/components/dashboard/QuickLogModal';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
 import { AdaptiveFavoritesModal } from '@/components/favorites/AdaptiveFavoritesModal';
+import { GroceryListModal } from '@/components/grocery/GroceryListModal';
 import { filterOrGenerateRecipes } from '@/lib/mockRecipes';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { classifyIngredient } from '@/lib/groceryClassifier';
+import { Sparkles, ArrowRight, ShoppingCart } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY_PROFILE = 'nutri_ai_user_profile';
 const LOCAL_STORAGE_KEY_MEALS = 'nutri_ai_logged_meals';
 const LOCAL_STORAGE_KEY_FAVS = 'nutri_ai_adaptive_favs';
+const LOCAL_STORAGE_KEY_GROCERY = 'nutri_ai_grocery_list';
 
 export default function Home() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loggedMeals, setLoggedMeals] = useState<LoggedMeal[]>([]);
   const [adaptiveFavorites, setAdaptiveFavorites] = useState<MealCardProposal[]>([]);
+  const [groceryItems, setGroceryItems] = useState<GroceryItem[]>([]);
 
   // Navigation State
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
@@ -39,6 +43,7 @@ export default function Home() {
   const [preSwipeCategory, setPreSwipeCategory] = useState<MealCategory>('dinner');
   const [detailRecipe, setDetailRecipe] = useState<MealCardProposal | null>(null);
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
+  const [isGroceryModalOpen, setIsGroceryModalOpen] = useState(false);
 
   // Hydrate from localStorage on client
   useEffect(() => {
@@ -56,6 +61,11 @@ export default function Home() {
       const storedFavs = localStorage.getItem(LOCAL_STORAGE_KEY_FAVS);
       if (storedFavs) {
         setAdaptiveFavorites(JSON.parse(storedFavs));
+      }
+
+      const storedGrocery = localStorage.getItem(LOCAL_STORAGE_KEY_GROCERY);
+      if (storedGrocery) {
+        setGroceryItems(JSON.parse(storedGrocery));
       }
     } catch (e) {
       console.warn('Eroare la citirea din localStorage:', e);
@@ -80,6 +90,12 @@ export default function Home() {
     setAdaptiveFavorites(favs);
     localStorage.setItem(LOCAL_STORAGE_KEY_FAVS, JSON.stringify(favs));
   };
+
+  const saveGroceryItems = (items: GroceryItem[]) => {
+    setGroceryItems(items);
+    localStorage.setItem(LOCAL_STORAGE_KEY_GROCERY, JSON.stringify(items));
+  };
+
 
   // Macro Totals
   const consumedTotals = loggedMeals.reduce(
@@ -146,6 +162,52 @@ export default function Home() {
     // Ignored for current shortlist
   };
 
+  const handleToggleGroceryItem = (id: string) => {
+    saveGroceryItems(
+      groceryItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+    );
+  };
+
+  const handleDeleteGroceryItem = (id: string) => {
+    saveGroceryItems(groceryItems.filter((item) => item.id !== id));
+  };
+
+  const handleAddGroceryItem = (itemData: Omit<GroceryItem, 'id' | 'addedAt'>) => {
+    const newItem: GroceryItem = {
+      ...itemData,
+      id: 'grocery-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+      addedAt: new Date().toISOString(),
+    };
+    saveGroceryItems([newItem, ...groceryItems]);
+  };
+
+  const handleAddIngredientsToGrocery = (
+    ingredients: { name: string; amount: string; estimatedPriceRon?: number }[],
+    recipeTitle: string
+  ) => {
+    const newItems: GroceryItem[] = ingredients.map((ing, idx) => ({
+      id: `grocery-${Date.now()}-${idx}`,
+      name: ing.name,
+      amount: ing.amount,
+      category: classifyIngredient(ing.name),
+      estimatedPriceRon: ing.estimatedPriceRon,
+      checked: false,
+      recipeSourceTitle: recipeTitle,
+      addedAt: new Date().toISOString(),
+    }));
+    saveGroceryItems([...newItems, ...groceryItems]);
+  };
+
+  const handleClearCheckedGrocery = () => {
+    saveGroceryItems(groceryItems.filter((i) => !i.checked));
+  };
+
+  const handleClearAllGrocery = () => {
+    saveGroceryItems([]);
+  };
+
+  const uncompletedGroceryCount = groceryItems.filter((i) => !i.checked).length;
+
   const handleSelectWinner = (winner: MealCardProposal, runnerUps: MealCardProposal[]) => {
     const newMeal: LoggedMeal = {
       id: 'meal-' + Date.now(),
@@ -161,6 +223,12 @@ export default function Home() {
       timestamp: new Date().toISOString(),
     };
     saveMeals([newMeal, ...loggedMeals]);
+
+    // Auto-add ingredients that need to be bought
+    const missing = winner.ingredients.filter((ing) => ing.toBuy);
+    if (missing.length > 0) {
+      handleAddIngredientsToGrocery(missing, winner.title);
+    }
 
     if (runnerUps.length > 0) {
       const updatedFavs = [...adaptiveFavorites];
@@ -232,16 +300,32 @@ export default function Home() {
                   <h1 className="greeting-name">Salut, {profile.name || 'Alex'}</h1>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn-quick-swipe-header"
-                  onClick={() => setIsPreSwipeModalOpen(true)}
-                  aria-label="Deschide Swipe Meal"
-                >
-                  <Sparkles size={15} />
-                  <span>Swipe Meal</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="btn-header-grocery"
+                    onClick={() => setIsGroceryModalOpen(true)}
+                    aria-label="Deschide lista de cumpărături"
+                  >
+                    <ShoppingCart size={14} />
+                    <span>Listă</span>
+                    {uncompletedGroceryCount > 0 && (
+                      <span className="badge-grocery-count tabular-num">{uncompletedGroceryCount}</span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-quick-swipe-header"
+                    onClick={() => setIsPreSwipeModalOpen(true)}
+                    aria-label="Deschide Swipe Meal"
+                  >
+                    <Sparkles size={14} />
+                    <span>Swipe Meal</span>
+                  </button>
+                </div>
               </div>
+
 
               {/* Macro Circular Gauge & Summary */}
               <MacroRings
@@ -348,6 +432,7 @@ export default function Home() {
                 handleCookAndLogFromSheet(rec);
                 setCurrentTab('dashboard');
               }}
+              onAddIngredientsToGrocery={handleAddIngredientsToGrocery}
               onClose={() => setCurrentTab('dashboard')}
               onStartSwipe={() => setCurrentTab('swipe')}
             />
@@ -367,7 +452,7 @@ export default function Home() {
       </main>
 
         {/* Global Floating Glass Dock (Hidden when modal or sheet is open) */}
-        {!isQuickLogOpen && !isPreSwipeModalOpen && !detailRecipe && (
+        {!isQuickLogOpen && !isPreSwipeModalOpen && !detailRecipe && !isGroceryModalOpen && (
           <BottomNavigation
             currentTab={currentTab}
             onTabChange={(tab) => {
@@ -410,7 +495,21 @@ export default function Home() {
             handleCookAndLogFromSheet(rec);
             setDetailRecipe(null);
           }}
+          onAddIngredientsToGrocery={handleAddIngredientsToGrocery}
         />
+
+        {isGroceryModalOpen && (
+          <GroceryListModal
+            items={groceryItems}
+            onToggleItem={handleToggleGroceryItem}
+            onDeleteItem={handleDeleteGroceryItem}
+            onAddItem={handleAddGroceryItem}
+            onClearChecked={handleClearCheckedGrocery}
+            onClearAll={handleClearAllGrocery}
+            onClose={() => setIsGroceryModalOpen(false)}
+          />
+        )}
+
 
 
       <style jsx>{`
