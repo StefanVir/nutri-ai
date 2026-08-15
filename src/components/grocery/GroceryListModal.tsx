@@ -45,6 +45,12 @@ export function GroceryListModal({
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Quick Add state (declared unconditionally at top)
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemAmount, setNewItemAmount] = useState('');
+  const [newItemPrice, setNewItemPrice] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<GroceryCategory | 'auto'>('auto');
+
   const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
     onClose,
     isOpen: isOpen,
@@ -52,12 +58,6 @@ export function GroceryListModal({
 
   if (isOpen === false) return null;
 
-
-  // Quick Add state
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemAmount, setNewItemAmount] = useState('');
-  const [newItemPrice, setNewItemPrice] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<GroceryCategory | 'auto'>('auto');
 
   const uncompletedItems = items.filter((i) => !i.checked);
   const completedItems = items.filter((i) => i.checked);
