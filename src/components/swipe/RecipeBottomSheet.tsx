@@ -106,10 +106,7 @@ export function RecipeBottomSheet({
           {/* Header */}
           <div className="sheet-header" {...dragProps}>
             <div className="header-tags-row flex items-center gap-2">
-              <span className="mode-chip">{recipe.mode === 'fridge' ? 'Din Frigider' : 'Smart Grocery'}</span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                {flavor.badge}
-              </span>
+              <span className="mode-chip">{recipe.mode === 'fridge' ? 'Din Frigider' : 'Cumpărături'}</span>
               <div className="time-pill">
                 <Clock size={13} />
                 <span className="tabular-num">{converted.prepTimeMinutes + converted.cookTimeMinutes} min</span>
@@ -132,19 +129,12 @@ export function RecipeBottomSheet({
           <p className="recipe-match-desc">
             {recipe.matchReason && !recipe.matchReason.toLowerCase().startsWith('explică')
               ? recipe.matchReason
-              : 'Optimizat pentru aport proteic ridicat și sațietate metabolică.'}
+              : 'Rețetă optimizată pentru obiectivul tău nutrițional.'}
           </p>
-
-          {/* Chef Flavor Balance Tip (If Applicable) */}
-          {flavor.balanceTip && (
-            <div className="mx-6 my-2 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-start gap-2.5 text-xs text-emerald-200">
-              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>{flavor.balanceTip}</span>
-            </div>
-          )}
 
           {/* Interactive Appliance Converter Selector */}
           <div className="mx-6 my-3 p-1.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-1">
+
             <button
               onClick={() => setSelectedAppliance('Aragaz / Tigaie')}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${

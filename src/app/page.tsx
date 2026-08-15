@@ -319,16 +319,15 @@ export default function Home() {
                     type="button"
                     className="btn-quick-swipe-header"
                     onClick={() => setIsPreSwipeModalOpen(true)}
-                    aria-label="Deschide Swipe Meal"
+                    aria-label="Sugestii rețete"
                   >
                     <Sparkles size={14} />
-                    <span>Swipe Meal</span>
+                    <span>Rețete</span>
                   </button>
                 </div>
               </div>
 
-
-              {/* Macro Circular Gauge & Summary */}
+              {/* Macro Gauge & Summary */}
               <MacroRings
                 calorieTarget={profile.calorieTarget}
                 consumedCalories={consumedTotals.calories}
@@ -339,34 +338,6 @@ export default function Home() {
                 fatTarget={profile.fatTarget}
                 consumedFat={consumedTotals.fat}
               />
-
-              <div
-                className="swipe-promo-banner"
-                role="button"
-                tabIndex={0}
-                aria-label="Deschide The Swipe Machine"
-                onClick={() => setIsPreSwipeModalOpen(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setIsPreSwipeModalOpen(true);
-                  }
-                }}
-              >
-                <div className="promo-left">
-                  <div className="promo-icon-wrap">
-                    <Sparkles size={20} className="sparkle-gold" />
-                  </div>
-                  <div>
-                    <h3 className="promo-title">The Swipe Machine</h3>
-                    <span className="promo-sub">Găsește rețeta optimă pe macro-urile rămase</span>
-                  </div>
-                </div>
-                <span className="promo-cta">
-                  <span>Start</span>
-                  <ArrowRight size={14} />
-                </span>
-              </div>
 
               <DailyJournal
                 loggedMeals={loggedMeals}
@@ -404,24 +375,25 @@ export default function Home() {
               ) : (
                 <div className="swipe-idle-screen animate-fade-in">
                   <div className="idle-hero-icon">
-                    <Sparkles size={36} className="sparkle-gold" />
+                    <Sparkles size={28} className="text-amber-400" />
                   </div>
-                  <h2 className="idle-title">The Swipe Machine</h2>
+                  <h2 className="idle-title">Sugestii de rețete</h2>
                   <p className="idle-desc">
-                    Alege dacă vrei să gătești cu ce ai în frigider, dacă frigiderul e gol și vrei rețete într-un buget fix sau dacă mănânci în oraș.
+                    Alege ingredientele din frigider sau stabilește un buget pentru a primi opțiuni calibrate pe macro-urile tale.
                   </p>
                   <button
                     type="button"
                     className="btn-start-swipe"
                     onClick={() => setIsPreSwipeModalOpen(true)}
                   >
-                    <Sparkles size={18} />
-                    <span>Configurează & Deschide Deck-ul</span>
+                    <Sparkles size={16} />
+                    <span>Configurează căutarea</span>
                   </button>
                 </div>
               )}
             </div>
           )}
+
 
           {/* TAB 4: ADAPTIVE FAVORITES */}
           {currentTab === 'favorites' && (

@@ -26,35 +26,27 @@ export function AdaptiveFavoritesModal({
   onClose,
   onStartSwipe,
 }: AdaptiveFavoritesModalProps) {
-
   return (
     <div className="fav-screen animate-fade-in">
       <div className="fav-header">
-        <div className="fav-badge">
-          <Bookmark size={15} />
-          <span>Adaptive Favorites</span>
-        </div>
-        <h2 className="fav-title">Rețete Favorite & Memorie AI</h2>
+        <h2 className="fav-title">Rețete salvate</h2>
         <p className="fav-sub">
-          Rețetele pe care ai dat Swipe Right sunt memorate aici. AI-ul le va re-propune cu prioritate când ai ingredientele potrivite.
+          Rețetele salvate din sugestii pentru acces rapid și planificare.
         </p>
       </div>
 
       <div className="fav-list">
         {favorites.length === 0 ? (
           <div className="empty-fav-box">
-            <div className="empty-icon-circle">
-              <Bookmark size={28} className="empty-icon" />
-            </div>
-            <strong className="empty-head">Nicio rețetă favorită salvată</strong>
-            <p className="empty-desc">Dă Swipe Right pe cardurile care îți plac în Swipe Deck pentru a le adăuga automat în memorie.</p>
+            <strong className="empty-head">Nicio rețetă salvată</strong>
+            <p className="empty-desc">Salvează rețete din lista de sugestii pentru a le găsi rapid aici.</p>
             {onStartSwipe && (
               <button
                 type="button"
                 className="btn-empty-swipe"
                 onClick={onStartSwipe}
               >
-                <span>Explorează Swipe Deck</span>
+                <span>Descoperă rețete</span>
               </button>
             )}
           </div>
@@ -74,7 +66,7 @@ export function AdaptiveFavoritesModal({
                       onClick={() => onRemoveFavorite(recipe.id)}
                       aria-label="Șterge din favorite"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={14} />
                     </button>
                   </div>
 
@@ -97,8 +89,8 @@ export function AdaptiveFavoritesModal({
                   className="btn-fav-view"
                   onClick={() => onOpenDetails(recipe)}
                 >
-                  <Eye size={14} />
-                  <span>Vezi Rețeta</span>
+                  <Eye size={13} />
+                  <span>Vezi rețeta</span>
                 </button>
 
                 {onAddIngredientsToGrocery && (
@@ -117,7 +109,7 @@ export function AdaptiveFavoritesModal({
                     }
                     title="Adaugă ingredientele în lista de cumpărături"
                   >
-                    <ShoppingCart size={14} />
+                    <ShoppingCart size={13} />
                     <span>Cumpără</span>
                   </button>
                 )}
@@ -127,11 +119,10 @@ export function AdaptiveFavoritesModal({
                   className="btn-fav-cook"
                   onClick={() => onCookAndLog(recipe)}
                 >
-                  <Plus size={14} />
-                  <span>Gătește</span>
+                  <Plus size={13} />
+                  <span>Loghează</span>
                 </button>
               </div>
-
             </div>
           ))
         )}
@@ -141,107 +132,75 @@ export function AdaptiveFavoritesModal({
         .fav-screen {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 14px;
+          padding: 0 20px var(--bottom-safe-padding) 20px;
         }
 
         .fav-header {
           display: flex;
           flex-direction: column;
-          gap: 4px;
-        }
-
-        .fav-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 0.72rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: var(--macro-protein);
-          margin-bottom: 2px;
+          gap: 3px;
+          padding-top: max(20px, env(safe-area-inset-top, 20px));
         }
 
         .fav-title {
-          font-size: 1.25rem;
+          font-size: 1.15rem;
           font-weight: 800;
           color: var(--text-primary);
           letter-spacing: -0.01em;
         }
 
         .fav-sub {
-          font-size: 0.78rem;
+          font-size: 0.76rem;
           color: var(--text-secondary);
-          line-height: 1.4;
         }
 
         .fav-list {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 8px;
         }
 
         .empty-fav-box {
-          padding: 36px 20px;
-          background: var(--bg-card);
-          border: 1px dashed var(--border-medium);
-          border-radius: var(--radius-lg);
+          padding: 36px 16px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px dashed rgba(255, 255, 255, 0.08);
+          border-radius: var(--radius-md);
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 10px;
-        }
-
-        .empty-icon-circle {
-          width: 54px;
-          height: 54px;
-          border-radius: var(--radius-full);
-          background: rgba(16, 185, 129, 0.12);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--macro-protein);
-          margin-bottom: 4px;
+          gap: 6px;
         }
 
         .empty-head {
-          font-size: 1rem;
-          font-weight: 800;
+          font-size: 0.92rem;
+          font-weight: 700;
           color: var(--text-primary);
         }
 
         .empty-desc {
-          font-size: 0.78rem;
-          color: var(--text-secondary);
-          max-width: 280px;
-          line-height: 1.4;
+          font-size: 0.76rem;
+          color: var(--text-tertiary);
+          max-width: 260px;
         }
 
         .btn-empty-swipe {
-          margin-top: 8px;
-          padding: 10px 18px;
-          min-height: 44px;
-          background: rgba(16, 185, 129, 0.16);
-          border: 1px solid rgba(16, 185, 129, 0.4);
+          margin-top: 10px;
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: var(--radius-full);
-          color: var(--macro-protein);
-          font-size: 0.8rem;
-          font-weight: 800;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .btn-empty-swipe:active {
-          transform: scale(0.97);
-          background: rgba(16, 185, 129, 0.25);
+          color: var(--text-primary);
+          font-size: 0.78rem;
+          font-weight: 700;
         }
 
         .fav-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border-medium);
+          background: #0d121d;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-md);
-          padding: 14px;
+          padding: 12px;
           display: flex;
           flex-direction: column;
           gap: 10px;
@@ -250,23 +209,22 @@ export function AdaptiveFavoritesModal({
         .fav-card-content {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
         .fav-thumb-img {
-          width: 56px;
-          height: 56px;
+          width: 52px;
+          height: 52px;
           border-radius: var(--radius-sm);
           object-fit: cover;
           flex-shrink: 0;
-          border: 1px solid var(--border-subtle);
         }
 
         .fav-details-col {
           display: flex;
           flex-direction: column;
           flex: 1;
-          gap: 6px;
+          gap: 4px;
         }
 
         .fav-card-top {
@@ -276,25 +234,19 @@ export function AdaptiveFavoritesModal({
         }
 
         .fav-card-title {
-          font-size: 0.96rem;
+          font-size: 0.9rem;
           font-weight: 700;
           color: var(--text-primary);
         }
 
         .btn-del-fav {
           color: var(--text-tertiary);
-          padding: 10px;
-          min-width: 44px;
-          min-height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: var(--radius-sm);
+          padding: 4px;
+          cursor: pointer;
         }
 
         .btn-del-fav:active {
-          color: var(--status-error);
-          background: rgba(239, 68, 68, 0.1);
+          color: #ef4444;
         }
 
         .fav-meta-row {
@@ -323,47 +275,37 @@ export function AdaptiveFavoritesModal({
         .fav-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
           padding-top: 6px;
-          border-top: 1px solid var(--border-subtle);
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .btn-fav-view {
           display: flex;
           align-items: center;
           gap: 4px;
-          padding: 10px 14px;
-          min-height: 44px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid var(--border-subtle);
+          padding: 6px 12px;
+          min-height: 34px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-sm);
           font-size: 0.74rem;
-          font-weight: 700;
+          font-weight: 600;
           color: var(--text-secondary);
-        }
-
-        .btn-fav-view:active {
-          background: rgba(255, 255, 255, 0.1);
-          transform: scale(0.97);
         }
 
         .btn-fav-grocery {
           display: flex;
           align-items: center;
           gap: 4px;
-          padding: 10px 14px;
-          min-height: 44px;
-          background: rgba(99, 102, 241, 0.15);
-          border: 1px solid rgba(99, 102, 241, 0.35);
+          padding: 6px 12px;
+          min-height: 34px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-sm);
           font-size: 0.74rem;
-          font-weight: 700;
-          color: #a5b4fc;
-        }
-
-        .btn-fav-grocery:active {
-          background: rgba(99, 102, 241, 0.25);
-          transform: scale(0.97);
+          font-weight: 600;
+          color: var(--text-secondary);
         }
 
         .btn-fav-cook {
@@ -372,18 +314,13 @@ export function AdaptiveFavoritesModal({
           align-items: center;
           justify-content: center;
           gap: 4px;
-          padding: 10px 14px;
-          min-height: 44px;
-          background: var(--macro-protein);
+          padding: 6px 12px;
+          min-height: 34px;
+          background: #10b981;
           color: #061e14;
           border-radius: var(--radius-sm);
           font-size: 0.76rem;
-          font-weight: 800;
-        }
-
-        .btn-fav-cook:active {
-          transform: scale(0.97);
-          filter: brightness(0.95);
+          font-weight: 700;
         }
       `}</style>
     </div>

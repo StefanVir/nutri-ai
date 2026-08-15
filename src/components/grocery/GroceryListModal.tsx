@@ -11,7 +11,6 @@ import {
   Trash2,
   Share2,
   X,
-  Sparkles,
   ChevronDown,
   ChevronUp,
   CheckCheck,
@@ -29,7 +28,7 @@ interface GroceryListModalProps {
   onClose: () => void;
 }
 
-type FilterTab = 'all' | 'uncompleted' | 'completed';
+type FilterTab = 'uncompleted' | 'all' | 'completed';
 
 export function GroceryListModal({
   isOpen = true,
@@ -45,11 +44,10 @@ export function GroceryListModal({
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Quick Add state (declared unconditionally at top)
+  // Quick Add state
   const [newItemName, setNewItemName] = useState('');
   const [newItemAmount, setNewItemAmount] = useState('');
   const [newItemPrice, setNewItemPrice] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<GroceryCategory | 'auto'>('auto');
 
   const { sheetStyle, backdropStyle, dragProps, scrollRef } = useSwipeDownSheet({
     onClose,
@@ -57,7 +55,6 @@ export function GroceryListModal({
   });
 
   if (isOpen === false) return null;
-
 
   const uncompletedItems = items.filter((i) => !i.checked);
   const completedItems = items.filter((i) => i.checked);
@@ -77,7 +74,7 @@ export function GroceryListModal({
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 2500);
+    }, 2000);
   };
 
   const handleCopyWhatsApp = async () => {
@@ -93,9 +90,9 @@ export function GroceryListModal({
         document.execCommand('copy');
         document.body.removeChild(textArea);
       }
-      showToast('✅ Lista a fost copiată pe Clipboard!');
+      showToast('Lista a fost copiată pe clipboard');
     } catch {
-      showToast('❌ Nu s-a putut copia textul');
+      showToast('Eroare la copiere');
     }
   };
 
@@ -103,11 +100,7 @@ export function GroceryListModal({
     e.preventDefault();
     if (!newItemName.trim()) return;
 
-    const cat: GroceryCategory =
-      selectedCategory === 'auto'
-        ? classifyIngredient(newItemName.trim())
-        : selectedCategory;
-
+    const cat = classifyIngredient(newItemName.trim());
     const priceNum = parseFloat(newItemPrice);
 
     onAddItem({
@@ -122,7 +115,6 @@ export function GroceryListModal({
     setNewItemName('');
     setNewItemAmount('');
     setNewItemPrice('');
-    setSelectedCategory('auto');
     showToast(`Adăugat: ${newItemName.trim()}`);
   };
 
@@ -133,7 +125,6 @@ export function GroceryListModal({
     }));
   };
 
-  // Group items by category
   const categoriesOrder: GroceryCategory[] = ['produce', 'protein', 'dairy', 'bakery', 'pantry', 'other'];
 
   return (
@@ -148,25 +139,20 @@ export function GroceryListModal({
           <div className="grocery-drag-handle" />
         </div>
 
-        {/* Modal Header */}
+        {/* Header */}
         <div className="grocery-header" {...dragProps}>
-
-          <div className="grocery-header-title-wrap">
-            <div className="grocery-icon-badge">
-              <ShoppingCart size={18} />
-            </div>
-            <div>
-              <h2 className="grocery-title">Listă de Cumpărături</h2>
-              <span className="grocery-sub">Agregată inteligent pe raioane din supermarket</span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <ShoppingCart size={18} className="text-slate-300" />
+            <h2 className="text-base font-bold text-white tracking-tight">Listă de cumpărături</h2>
           </div>
+
           <button
             type="button"
             className="btn-sheet-close"
             onClick={onClose}
-            aria-label="Închide lista de cumpărături"
+            aria-label="Închide"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -179,56 +165,45 @@ export function GroceryListModal({
 
         {/* Scrollable Content */}
         <div className="grocery-content-scroll" ref={scrollRef}>
-          {/* Metrics Card */}
+          {/* Metrics Overview */}
           <div className="grocery-metrics-card">
-            <div className="metrics-row-top">
-              <div className="metric-stat">
-                <span className="stat-label">De cumpărat</span>
-                <span className="stat-num tabular-num">
-                  {uncompletedItems.length} <span className="stat-sub-num">/ {items.length}</span>
-                </span>
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs text-slate-400 font-medium">De cumpărat</span>
+                <div className="text-xl font-bold text-white tabular-num mt-0.5">
+                  {uncompletedItems.length}{' '}
+                  <span className="text-xs font-normal text-slate-500">/ {items.length} produse</span>
+                </div>
               </div>
 
               {totalEstimatedCost > 0 && (
-                <div className="metric-stat metric-cost">
-                  <span className="stat-label">Cost estimat rămas</span>
-                  <span className="stat-num cost-highlight tabular-num">
-                    ~{remainingCost.toFixed(0)} <span className="stat-currency">RON</span>
-                  </span>
+                <div className="text-right">
+                  <span className="text-xs text-slate-400 font-medium">Cost estimat rămas</span>
+                  <div className="text-lg font-bold text-amber-400 tabular-num mt-0.5">
+                    {remainingCost.toFixed(0)} <span className="text-xs font-semibold text-slate-400">RON</span>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Progress Bar */}
-            <div className="grocery-progress-bar-wrap">
+            <div className="grocery-progress-bar-wrap mt-3">
               <div className="grocery-progress-track">
                 <div
                   className="grocery-progress-fill"
                   style={{ width: `${completionRate}%` }}
                 />
               </div>
-              <span className="grocery-progress-pct tabular-num">{completionRate}% complet</span>
+              <span className="text-xs font-semibold text-emerald-400 tabular-num">{completionRate}%</span>
             </div>
           </div>
 
           {/* Quick Add Form */}
           <form className="grocery-quick-add-card" onSubmit={handleQuickAdd}>
-            <div className="quick-add-header">
-              <span className="quick-add-title">
-                <Plus size={14} /> Adaugă rapid un articol
-              </span>
-              {newItemName.trim() && selectedCategory === 'auto' && (
-                <span className="auto-detect-pill">
-                  Auto: {GROCERY_CATEGORIES[classifyIngredient(newItemName)].emoji}{' '}
-                  {GROCERY_CATEGORIES[classifyIngredient(newItemName)].label}
-                </span>
-              )}
-            </div>
-
             <div className="quick-add-inputs-row">
               <input
                 type="text"
-                placeholder="Ex: Iaurt grecesc, Piept de pui, Spanac..."
+                placeholder="Adaugă produs..."
                 value={newItemName}
                 onChange={(e) => setNewItemName(e.target.value)}
                 className="grocery-input-main"
@@ -236,7 +211,7 @@ export function GroceryListModal({
               />
               <input
                 type="text"
-                placeholder="Cantitate (ex: 2 buc)"
+                placeholder="Cantitate"
                 value={newItemAmount}
                 onChange={(e) => setNewItemAmount(e.target.value)}
                 className="grocery-input-sm"
@@ -244,7 +219,7 @@ export function GroceryListModal({
               <input
                 type="number"
                 step="0.5"
-                placeholder="Preț lei"
+                placeholder="Lei"
                 value={newItemPrice}
                 onChange={(e) => setNewItemPrice(e.target.value)}
                 className="grocery-input-price"
@@ -253,14 +228,14 @@ export function GroceryListModal({
                 type="submit"
                 className="btn-quick-add-submit"
                 disabled={!newItemName.trim()}
-                aria-label="Adaugă ingredient"
+                aria-label="Adaugă produs"
               >
-                <Plus size={18} />
+                <Plus size={16} />
               </button>
             </div>
           </form>
 
-          {/* Filter Tabs & Quick Actions */}
+          {/* Filter Tabs & Share Action */}
           <div className="grocery-tabs-bar">
             <div className="filter-chips-wrap">
               <button
@@ -296,32 +271,29 @@ export function GroceryListModal({
                 type="button"
                 className="btn-copy-whatsapp"
                 onClick={handleCopyWhatsApp}
-                title="Copiază pe WhatsApp"
+                title="Copiază textul listei"
               >
-                <Share2 size={14} />
-                <span>WhatsApp</span>
+                <Share2 size={13} />
+                <span>Copiază</span>
               </button>
             )}
           </div>
 
-          {/* Items List grouped by category */}
+          {/* Categorized Items */}
           {displayedItems.length === 0 ? (
             <div className="grocery-empty-box">
-              <div className="empty-cart-icon">
-                <ShoppingCart size={32} />
-              </div>
-              <strong className="empty-cart-title">
+              <span className="text-sm font-medium text-slate-300">
                 {filter === 'completed'
-                  ? 'Nu ai niciun articol bifat ca și cumpărat'
+                  ? 'Niciun produs bifat.'
                   : filter === 'uncompleted' && items.length > 0
-                  ? 'Felicitări! Ai cumpărat toate ingredientele din listă.'
-                  : 'Lista de cumpărături este goală'}
-              </strong>
-              <p className="empty-cart-sub">
+                  ? 'Ai cumpărat toate produsele din listă.'
+                  : 'Lista este goală.'}
+              </span>
+              <span className="text-xs text-slate-500 max-w-xs">
                 {items.length === 0
-                  ? 'Adaugă ingrediente manual mai sus sau apasă pe „Adaugă în listă” din cardul oricărei rețete găsite la Swipe.'
-                  : 'Poți bifa sau debifa articole oricând.'}
-              </p>
+                  ? 'Adaugă produse manual sau trimite ingredientele direct din rețete.'
+                  : 'Schimbă filtrul pentru a vedea celelalte articole.'}
+              </span>
             </div>
           ) : (
             <div className="grocery-categories-container">
@@ -348,12 +320,11 @@ export function GroceryListModal({
                       }}
                     >
                       <div className="aisle-title-group">
-                        <span className="aisle-emoji">{catMeta.emoji}</span>
                         <strong className="aisle-name">{catMeta.label}</strong>
                         <span className="aisle-count tabular-num">{catItems.length}</span>
                       </div>
                       <div className="aisle-collapse-icon">
-                        {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                        {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                       </div>
                     </div>
 
@@ -370,7 +341,7 @@ export function GroceryListModal({
                             <div className="grocery-check-box">
                               {item.checked ? (
                                 <div className="checked-indicator">
-                                  <Check size={14} className="check-icon-svg" />
+                                  <Check size={13} className="check-icon-svg" />
                                 </div>
                               ) : (
                                 <div className="unchecked-indicator" />
@@ -384,12 +355,7 @@ export function GroceryListModal({
                                 <span className="grocery-item-amount">{item.amount}</span>
                                 {item.estimatedPriceRon && (
                                   <span className="grocery-item-price tabular-num">
-                                    ~{item.estimatedPriceRon} lei
-                                  </span>
-                                )}
-                                {item.recipeSourceTitle && (
-                                  <span className="grocery-item-source">
-                                    {item.recipeSourceTitle}
+                                    {item.estimatedPriceRon} lei
                                   </span>
                                 )}
                               </div>
@@ -405,7 +371,7 @@ export function GroceryListModal({
                               }}
                               aria-label={`Șterge ${item.name}`}
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         ))}
@@ -417,7 +383,7 @@ export function GroceryListModal({
             </div>
           )}
 
-          {/* Clear & Manage Actions */}
+          {/* Footer Actions */}
           {items.length > 0 && (
             <div className="grocery-footer-actions">
               {completedItems.length > 0 && (
@@ -427,7 +393,7 @@ export function GroceryListModal({
                   onClick={onClearChecked}
                 >
                   <CheckCheck size={14} />
-                  <span>Curăță articolele cumpărate ({completedItems.length})</span>
+                  <span>Curăță produsele bifate ({completedItems.length})</span>
                 </button>
               )}
 
@@ -435,13 +401,13 @@ export function GroceryListModal({
                 type="button"
                 className="btn-clear-all-grocery"
                 onClick={() => {
-                  if (confirm('Sigur dorești să golești toată lista de cumpărături?')) {
+                  if (confirm('Golești toată lista de cumpărături?')) {
                     onClearAll();
                   }
                 }}
               >
                 <RotateCcw size={14} />
-                <span>Golește toată lista</span>
+                <span>Golește lista</span>
               </button>
             </div>
           )}

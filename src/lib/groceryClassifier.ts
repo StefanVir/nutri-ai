@@ -3,46 +3,32 @@ import { GroceryCategory, GroceryItem } from '@/types/nutrition';
 interface CategoryMetadata {
   id: GroceryCategory;
   label: string;
-  emoji: string;
-  color: string;
 }
 
 export const GROCERY_CATEGORIES: Record<GroceryCategory, CategoryMetadata> = {
   produce: {
     id: 'produce',
     label: 'Legume & Fructe',
-    emoji: '🥦',
-    color: '#10b981',
   },
   protein: {
     id: 'protein',
     label: 'Carne, Pește & Ouă',
-    emoji: '🥩',
-    color: '#f43f5e',
   },
   dairy: {
     id: 'dairy',
     label: 'Lactate & Brânzeturi',
-    emoji: '🧀',
-    color: '#06b6d4',
   },
   bakery: {
     id: 'bakery',
     label: 'Panificație & Cereale',
-    emoji: '🍞',
-    color: '#f59e0b',
   },
   pantry: {
     id: 'pantry',
-    label: 'Cămară, Uleiuri & Condimente',
-    emoji: '🥫',
-    color: '#a855f7',
+    label: 'Cămară & Condimente',
   },
   other: {
     id: 'other',
-    label: 'Diverse & Altele',
-    emoji: '🛒',
-    color: '#94a3b8',
+    label: 'Diverse',
   },
 };
 
@@ -81,7 +67,7 @@ const PANTRY_KEYWORDS = [
   'busuioc', 'scortisoara', 'scorțișoară', 'sos', 'mustar', 'muștar', 'ketchup', 'maioneza', 'maioneză',
   'miere', 'nuci', 'migdale', 'seminte', 'semințe', 'seminte de chia', 'conserve', 'fasole', 'naut', 'năut',
   'linte', 'sos de soia', 'bulion', 'pasta de tomate', 'pastă de tomate', 'zahar', 'zahăr', 'pesmet',
-  'malai', 'quinoa', 'cuscus', 'chia', 'caju', 'arahide', 'unt de arahide', 'cacao', 'vanilie', 'praf de copt'
+  'quinoa', 'cuscus', 'chia', 'caju', 'arahide', 'unt de arahide', 'cacao', 'vanilie', 'praf de copt'
 ];
 
 export function classifyIngredient(rawName: string): GroceryCategory {
@@ -91,31 +77,26 @@ export function classifyIngredient(rawName: string): GroceryCategory {
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
-  // 1. Protein check
   for (const kw of PROTEIN_KEYWORDS) {
     const normKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (normalized.includes(normKw)) return 'protein';
   }
 
-  // 2. Dairy check
   for (const kw of DAIRY_KEYWORDS) {
     const normKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (normalized.includes(normKw)) return 'dairy';
   }
 
-  // 3. Bakery check
   for (const kw of BAKERY_KEYWORDS) {
     const normKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (normalized.includes(normKw)) return 'bakery';
   }
 
-  // 4. Produce check
   for (const kw of PRODUCE_KEYWORDS) {
     const normKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (normalized.includes(normKw)) return 'produce';
   }
 
-  // 5. Pantry check
   for (const kw of PANTRY_KEYWORDS) {
     const normKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     if (normalized.includes(normKw)) return 'pantry';
@@ -125,45 +106,41 @@ export function classifyIngredient(rawName: string): GroceryCategory {
 }
 
 export function formatGroceryListForExport(items: GroceryItem[]): string {
-  if (items.length === 0) return 'Lista de cumpărături NutriAI este goală.';
+  if (items.length === 0) return 'Lista de cumpărături este goală.';
 
   const uncompleted = items.filter((i) => !i.checked);
   const completed = items.filter((i) => i.checked);
 
-  let text = `🛒 *Lista de Cumpărături NutriAI* (${new Date().toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' })})\n`;
-  text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  let text = `Lista de Cumpărături (${new Date().toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' })})\n\n`;
 
   const categoriesOrder: GroceryCategory[] = ['produce', 'protein', 'dairy', 'bakery', 'pantry', 'other'];
 
   if (uncompleted.length > 0) {
-    text += `📌 *DE CUMPĂRAT (${uncompleted.length}):*\n`;
+    text += `DE CUMPĂRAT (${uncompleted.length}):\n`;
     for (const cat of categoriesOrder) {
       const catItems = uncompleted.filter((i) => i.category === cat);
       if (catItems.length > 0) {
         const meta = GROCERY_CATEGORIES[cat];
-        text += `\n${meta.emoji} *${meta.label}*\n`;
+        text += `\n[${meta.label}]\n`;
         catItems.forEach((item) => {
           const priceStr = item.estimatedPriceRon ? ` (~${item.estimatedPriceRon} lei)` : '';
-          text += `  ▫️ ${item.name} (${item.amount})${priceStr}\n`;
+          text += `• ${item.name} - ${item.amount}${priceStr}\n`;
         });
       }
     }
   }
 
   if (completed.length > 0) {
-    text += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `✅ *DEJA CUMPĂRATE (${completed.length}):*\n`;
+    text += `\nDEJA CUMPĂRATE (${completed.length}):\n`;
     completed.forEach((item) => {
-      text += `  ✔️ ~${item.name} (${item.amount})~\n`;
+      text += `✓ ${item.name} - ${item.amount}\n`;
     });
   }
 
   const totalEst = items.reduce((acc, i) => acc + (i.estimatedPriceRon || 0), 0);
   if (totalEst > 0) {
-    text += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `💰 *Cost total estimat:* ~${totalEst.toFixed(0)} RON\n`;
+    text += `\nCost estimat: ~${totalEst.toFixed(0)} RON\n`;
   }
 
-  text += `\n_Generat cu NutriAI — Intelligent Nutrition Platform_`;
   return text;
 }

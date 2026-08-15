@@ -165,7 +165,7 @@ export function PreSwipeModal({
         {/* Header with swipe down affordance */}
         <div className="modal-header" {...dragProps}>
           <div className="header-titles">
-            <h3 className="modal-title">Filtrează Swipe Deck</h3>
+            <h3 className="modal-title">Filtrare rețete</h3>
             <span className="modal-sub">
               Țintă {mealCategory === 'breakfast' ? 'Mic Dejun' : mealCategory === 'lunch' ? 'Prânz' : mealCategory === 'dinner' ? 'Cină' : 'Gustare'}: <strong className="tabular-num text-amber">~{currentSlot.targetCalories} kcal</strong> | <strong className="tabular-num text-emerald">~{currentSlot.targetProtein}g P</strong> <span style={{ opacity: 0.75 }}>({remainingCalories} kcal rămase azi)</span>
             </span>
@@ -215,8 +215,8 @@ export function PreSwipeModal({
                   <Refrigerator size={18} />
                 </div>
                 <div className="mode-content">
-                  <strong className="mode-title">Gătesc acasă (Ce am în frigider)</strong>
-                  <span className="mode-sub">AI folosește strict ingredientele din stoc</span>
+                  <strong className="mode-title">Din frigider</strong>
+                  <span className="mode-sub">Folosește exclusiv ingredientele pe care le ai deja</span>
                 </div>
               </button>
 
@@ -229,8 +229,8 @@ export function PreSwipeModal({
                   <ShoppingCart size={18} />
                 </div>
                 <div className="mode-content">
-                  <strong className="mode-title">Cumpărături inteligente cu buget</strong>
-                  <span className="mode-sub">Frigider gol sau stoc + buget suplimentar</span>
+                  <strong className="mode-title">Plan cumpărături cu buget</strong>
+                  <span className="mode-sub">Rețete încadrate într-un buget prestabilit</span>
                 </div>
               </button>
 
@@ -243,11 +243,12 @@ export function PreSwipeModal({
                   <Utensils size={18} />
                 </div>
                 <div className="mode-content">
-                  <strong className="mode-title">Mănânc în oraș</strong>
-                  <span className="mode-sub">Ghid optimizat pentru restaurante / bistrou</span>
+                  <strong className="mode-title">Restaurant / În oraș</strong>
+                  <span className="mode-sub">Opțiuni recomandate din meniurile uzuale</span>
                 </div>
               </button>
             </div>
+
           </div>
 
           {/* Grocery Fork Details */}
@@ -409,16 +410,17 @@ export function PreSwipeModal({
             {isGenerating ? (
               <>
                 <div className="btn-spinner" />
-                <span>Chef AI generează rețetele tale...</span>
+                <span>Se caută rețetele potrivite...</span>
               </>
             ) : (
               <>
-                <Sparkles size={18} />
-                <span>Generează & Deschide Swipe Deck</span>
+                <Sparkles size={16} />
+                <span>Afișează sugestiile</span>
               </>
             )}
           </button>
         </div>
+
 
         <style jsx>{`
           .modal-backdrop {

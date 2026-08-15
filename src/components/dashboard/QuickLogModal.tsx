@@ -302,8 +302,8 @@ export function QuickLogModal({
 
         <div className="modal-header" {...dragProps}>
           <div className="header-titles">
-            <h3 className="modal-title">Scanare Masă & Calibrare AI</h3>
-            <span className="modal-sub">Identificare Vizuală • Bază USDA • Reglare Gramaje</span>
+            <h3 className="modal-title">Înregistrare masă</h3>
+            <span className="modal-sub">Estimare nutrițională din foto sau descriere</span>
           </div>
           <button type="button" className="btn-close" onClick={onClose} aria-label="Închide">
             <X size={18} />
@@ -318,7 +318,7 @@ export function QuickLogModal({
             onClick={() => { setActiveTab('photo'); setInteractiveItems([]); }}
           >
             <Camera size={16} />
-            <span>Scanare Foto (AI Vision)</span>
+            <span>Foto farfurie</span>
           </button>
           <button
             type="button"
@@ -326,9 +326,10 @@ export function QuickLogModal({
             onClick={() => { setActiveTab('text'); setInteractiveItems([]); }}
           >
             <Sparkles size={16} />
-            <span>Text / Descriere</span>
+            <span>Descriere text</span>
           </button>
         </div>
+
 
         <div className="modal-body-scroll" ref={scrollRef}>
           {/* Category & Cooking Method Row */}

@@ -329,14 +329,15 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           <div className="summary-bullets">
             <div className="bullet-item">
               <ShieldCheck size={16} className="bullet-icon" />
-              <span>Swipe Deck va injecta automat macro-urile rămase în fiecare propunere AI.</span>
+              <span>Rețetele propuse sunt calibrate automat pe macronutrienții rămași ai zilei.</span>
             </div>
             <div className="bullet-item">
               <Zap size={16} className="bullet-icon" />
-              <span>NVIDIA NIM va genera pachete de rețete optimizate pe timpul și bugetul tău.</span>
+              <span>Poți ajusta oricând obiectivele calorice și macronutrienții din profil.</span>
             </div>
           </div>
         </div>
+
       )}
 
       {/* Action Footer */}

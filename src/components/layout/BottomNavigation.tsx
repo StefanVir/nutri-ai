@@ -20,50 +20,50 @@ export function BottomNavigation({ currentTab, onTabChange, shortlistCount = 0 }
           type="button"
           className={`dock-btn ${currentTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => onTabChange('dashboard')}
-          aria-label="Dashboard"
+          aria-label="Jurnal"
         >
-          <Home size={20} />
-          <span className="dock-label">Acasă</span>
+          <Home size={19} />
+          <span className="dock-label">Jurnal</span>
         </button>
 
-        {/* Tab 2: Swipe */}
+        {/* Tab 2: Recipes */}
         <button
           type="button"
           className={`dock-btn ${currentTab === 'swipe' ? 'active' : ''}`}
           onClick={() => onTabChange('swipe')}
-          aria-label="Swipe Deck"
+          aria-label="Rețete"
         >
           <div className="icon-with-badge">
-            <Sparkles size={20} className="sparkle-accent" />
+            <Sparkles size={19} />
             {shortlistCount > 0 && (
               <span className="dock-badge tabular-num">{shortlistCount}</span>
             )}
           </div>
-          <span className="dock-label">Swipe</span>
+          <span className="dock-label">Rețete</span>
         </button>
 
-        {/* CENTER ACTION BUTTON: Scan / Log (Elevated FAB) */}
+        {/* CENTER ACTION BUTTON: Scan / Log */}
         <button
           type="button"
           className="dock-fab-center"
           onClick={() => onTabChange('quick_log')}
-          aria-label="Scanează mâncarea cu AI Vision"
+          aria-label="Scanare alimente"
         >
           <div className="fab-circle-glow">
-            <Camera size={22} className="fab-icon" />
+            <Camera size={20} className="fab-icon" />
           </div>
-          <span className="fab-sub-label">Scan AI</span>
+          <span className="fab-sub-label">Scanare</span>
         </button>
 
-        {/* Tab 4: Favorites */}
+        {/* Tab 4: Saved Recipes */}
         <button
           type="button"
           className={`dock-btn ${currentTab === 'favorites' ? 'active' : ''}`}
           onClick={() => onTabChange('favorites')}
-          aria-label="Adaptive Favorites"
+          aria-label="Rețete salvate"
         >
-          <Bookmark size={20} />
-          <span className="dock-label">Favorite</span>
+          <Bookmark size={19} />
+          <span className="dock-label">Salvate</span>
         </button>
 
         {/* Tab 5: Profile */}
@@ -73,7 +73,7 @@ export function BottomNavigation({ currentTab, onTabChange, shortlistCount = 0 }
           onClick={() => onTabChange('profile')}
           aria-label="Profil"
         >
-          <User size={20} />
+          <User size={19} />
           <span className="dock-label">Profil</span>
         </button>
       </div>
